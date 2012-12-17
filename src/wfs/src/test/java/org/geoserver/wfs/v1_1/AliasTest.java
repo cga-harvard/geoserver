@@ -75,8 +75,9 @@ public class AliasTest extends WFSTestSupport {
         assertEquals("ft15.1", fidNode.getTextContent());
     }
     
-    public void testDescribeFeatureType() throws Exception {
+    public void testDescribeFeatureType2() throws Exception {
         Document doc = getAsDOM("wfs?request=DescribeFeatureType&typename=cdf:ft15&version=1.1.0");
+        print(doc);
         assertEquals("xsd:schema", doc.getDocumentElement().getNodeName());
 
         XMLAssert.assertXpathEvaluatesTo("ft15", "/xsd:schema/xsd:element/@name", doc);
