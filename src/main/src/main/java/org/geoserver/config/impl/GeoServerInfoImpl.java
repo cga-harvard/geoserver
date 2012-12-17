@@ -64,6 +64,8 @@ public class GeoServerInfoImpl implements GeoServerInfo {
     protected Boolean verbose;
     @Deprecated
     protected Boolean verboseExceptions;
+    @Deprecated
+    protected Boolean dynamicFeatureTypeSchemas;    
 
     private ResourceErrorHandling resourceErrorHandling;
 
@@ -176,6 +178,14 @@ public class GeoServerInfoImpl implements GeoServerInfo {
     public void setVerbose(boolean verbose) {
         getSettings().setVerbose(verbose);
     }
+    
+    public boolean isDynamicFeatureTypeSchema() {
+        return getSettings().isDynamicFeatureTypeSchema();
+    }
+
+    public void setDynamicFeatureTypeSchema(boolean dynamic) {
+        getSettings().setDynamicFeatureTypeSchema(dynamic);
+    }    
 
     public boolean isVerboseExceptions() {
         return getSettings().isVerboseExceptions();
@@ -407,7 +417,10 @@ public class GeoServerInfoImpl implements GeoServerInfo {
             setVerboseExceptions(verboseExceptions);
             verboseExceptions = null;
         }
-        
+        if (dynamicFeatureTypeSchemas != null) {
+            setDynamicFeatureTypeSchema(dynamicFeatureTypeSchemas);
+            dynamicFeatureTypeSchemas = null;
+        }        
         return this;
     }
 

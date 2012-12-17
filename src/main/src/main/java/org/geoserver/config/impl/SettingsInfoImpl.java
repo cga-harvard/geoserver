@@ -36,6 +36,8 @@ public class SettingsInfoImpl implements SettingsInfo {
     protected boolean verbose = true;
 
     protected boolean verboseExceptions = false;
+    
+    protected boolean dynamicFeatureTypeSchema = false;
 
     protected MetadataMap metadata = new MetadataMap();
 
@@ -149,6 +151,16 @@ public class SettingsInfoImpl implements SettingsInfo {
     public void setVerboseExceptions(boolean verboseExceptions) {
         this.verboseExceptions = verboseExceptions;
     }
+    
+    @Override
+    public boolean isDynamicFeatureTypeSchema() {
+        return dynamicFeatureTypeSchema;
+    }
+
+    @Override
+    public void setDynamicFeatureTypeSchema(boolean dynamicFeatureTypeSchema) {
+        this.dynamicFeatureTypeSchema = dynamicFeatureTypeSchema;
+    }    
 
     @Override
     public MetadataMap getMetadata() {
@@ -242,6 +254,8 @@ public class SettingsInfoImpl implements SettingsInfo {
         if (verbose != other.isVerbose())
             return false;
         if (verboseExceptions != other.isVerboseExceptions())
+            return false;
+        if (dynamicFeatureTypeSchema != other.isDynamicFeatureTypeSchema())
             return false;
 
         return true;

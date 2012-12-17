@@ -102,8 +102,10 @@ public abstract class FeatureTypeSchemaBuilder {
     protected String gmlPrefix;
     protected Configuration xmlConfiguration;
     protected volatile XSDElementDeclaration featureSubGroupElement;
+    protected boolean dynamicFeatureTypeSchema;
 
     protected FeatureTypeSchemaBuilder(GeoServer gs) {
+    	this.dynamicFeatureTypeSchema = gs.getGlobal().isDynamicFeatureTypeSchema();
         this.wfs = gs.getService( WFSInfo.class );
         this.catalog = gs.getCatalog();
         this.resourceLoader = gs.getCatalog().getResourceLoader();
@@ -342,6 +344,11 @@ public abstract class FeatureTypeSchemaBuilder {
         return schema;
     }
 
+    
+    public boolean getDynamicFeatureTypeSchema() {
+        return this.dynamicFeatureTypeSchema;
+    }
+    
     protected void importGMLSchema(XSDSchema schema, XSDFactory factory, String baseUrl) {
         XSDImport imprt = factory.createXSDImport();
         imprt.setNamespace(gmlNamespace);
@@ -466,6 +473,7 @@ public abstract class FeatureTypeSchemaBuilder {
     protected XSDSchema getWfsSchema() {
         return null;
     }
+
 
     /**
      * Adds types defined in the catalog to the provided schema.

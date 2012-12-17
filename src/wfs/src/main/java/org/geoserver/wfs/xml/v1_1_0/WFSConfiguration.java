@@ -75,13 +75,15 @@ public class WFSConfiguration extends Configuration {
      * Schema builder
      */
     protected FeatureTypeSchemaBuilder schemaBuilder;
+    
+    
+    protected boolean dynamicFeatureTypeSchema = false;
 
     public WFSConfiguration(GeoServer geoServer, FeatureTypeSchemaBuilder schemaBuilder, final WFS wfs) {
         super( wfs );
 
-        this.catalog = geoServer.getCatalog();
-        this.schemaBuilder = schemaBuilder;
-        
+        this.catalog = geoServer.getCatalog();        
+        this.dynamicFeatureTypeSchema = geoServer.getSettings().isDynamicFeatureTypeSchema();
         catalog.addListener(new CatalogListener() {
 
             public void handleAddEvent(CatalogAddEvent event) {
@@ -244,24 +246,26 @@ public class WFSConfiguration extends Configuration {
         FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
             .getComponentInstanceOfType(FeatureTypeCache.class);
 
-        Collection featureTypes = catalog.getFeatureTypes();
-        for (Iterator f = featureTypes.iterator(); f.hasNext();) {
-            FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
-            if ( !meta.enabled() ) {
-                continue;
-            }
+        if (!this.dynamicFeatureTypeSchema) {
+        	Collection featureTypes = catalog.getFeatureTypes();
+        	for (Iterator f = featureTypes.iterator(); f.hasNext();) {
+        		FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
+        		if ( !meta.enabled() ) {
+        			continue;
+        		}
 
             
-            FeatureType featureType =  null;
-            try {
-                featureType = meta.getFeatureType();
-            } catch(Exception e) {
-                LOGGER.log(Level.WARNING, "Could not load underlying feature type for type " 
+        		FeatureType featureType =  null;
+        		try {
+        			featureType = meta.getFeatureType();
+        		} catch(Exception e) {
+        			LOGGER.log(Level.WARNING, "Could not load underlying feature type for type " 
                         + meta.getName(), e);
-                continue;
-            }
+        			continue;
+        		}
 
-            featureTypeCache.put(featureType);
+        		featureTypeCache.put(featureType);
+        	}
         }
     }
 
