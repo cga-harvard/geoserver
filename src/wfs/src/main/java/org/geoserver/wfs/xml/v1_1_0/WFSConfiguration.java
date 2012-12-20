@@ -83,7 +83,10 @@ public class WFSConfiguration extends Configuration {
         super( wfs );
 
         this.catalog = geoServer.getCatalog();        
+        this.schemaBuilder = schemaBuilder;
         this.dynamicFeatureTypeSchema = geoServer.getSettings().isDynamicFeatureTypeSchema();
+        
+        
         catalog.addListener(new CatalogListener() {
 
             public void handleAddEvent(CatalogAddEvent event) {
@@ -253,7 +256,6 @@ public class WFSConfiguration extends Configuration {
         		if ( !meta.enabled() ) {
         			continue;
         		}
-
             
         		FeatureType featureType =  null;
         		try {

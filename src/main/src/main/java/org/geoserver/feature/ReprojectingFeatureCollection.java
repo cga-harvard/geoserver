@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -56,6 +58,11 @@ import com.vividsolutions.jts.geom.Geometry;
  * 
  */
 public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
+    /**
+     * logger
+     */
+    static Logger LOGGER = org.geotools.util.logging.Logging.getLogger("org.geoserver.main");	
+	
     static final FilterFactory2 FF = CommonFactoryFinder.getFilterFactory2(null);
     
     /**
@@ -108,7 +115,9 @@ public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
             transformer.setMathTransform(tx);
             transformers.put(source, transformer);
         } else {
-            throw new RuntimeException("Source was null in trying to create a reprojected feature collection!");
+        	//Does anything really bad happen without this? Will try without it.
+        	LOGGER.log(Level.SEVERE, "Source was null in trying to create a reprojected feature collection!");
+            //throw new RuntimeException("Source was null in trying to create a reprojected feature collection!");
         }
     }
     

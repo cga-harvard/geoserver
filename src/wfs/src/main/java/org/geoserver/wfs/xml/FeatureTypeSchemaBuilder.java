@@ -10,6 +10,7 @@ import static org.geoserver.ows.util.ResponseUtils.params;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -469,13 +470,17 @@ public abstract class FeatureTypeSchemaBuilder {
         return null;
     }
 
+    public XSDSchema addApplicationTypes( XSDSchema wfsSchema) throws IOException {
+    	return this.addApplicationTypes(wfsSchema, catalog.getFeatureTypes());
+    } 
+    
 
     /**
      * Adds types defined in the catalog to the provided schema.
      */
-    public XSDSchema addApplicationTypes( XSDSchema wfsSchema ) throws IOException {
+    public XSDSchema addApplicationTypes( XSDSchema wfsSchema, Collection<FeatureTypeInfo> featureTypeInfos ) throws IOException {
         //incorporate application schemas into the wfs schema
-        Collection<FeatureTypeInfo> featureTypeInfos = catalog.getFeatureTypes();
+        //Collection<FeatureTypeInfo> featureTypeInfos = catalog.getFeatureTypes();
 
         for (Iterator<FeatureTypeInfo> i = featureTypeInfos.iterator(); i.hasNext();) {
             FeatureTypeInfo meta = i.next();
@@ -484,30 +489,34 @@ public abstract class FeatureTypeSchemaBuilder {
             if(!meta.enabled())
                 continue;
 
-            //build the schema for the types in the single namespace (and don't clean them, they are not dynamic)
-            XSDSchema schema = buildSchemaInternal(new FeatureTypeInfo[] { meta }, null, false);
-
             //declare the namespace
             String prefix = meta.getNamespace().getPrefix();
             String namespaceURI = meta.getNamespace().getURI();
             wfsSchema.getQNamePrefixToNamespaceMap().put(prefix, namespaceURI);
-
-            //add the types + elements to the wfs schema
-            for (Iterator<XSDTypeDefinition> t = schema.getTypeDefinitions().iterator(); t.hasNext();) {
-                wfsSchema.getTypeDefinitions().add(t.next());
-            }
-
-            for (Iterator<XSDElementDeclaration> e = schema.getElementDeclarations().iterator(); e.hasNext();) {
-                wfsSchema.getElementDeclarations().add(e.next());
-            }
             
-            // add secondary namespaces from catalog
-            for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) schema.getQNamePrefixToNamespaceMap()
-                    .entrySet()) {
-                if (!wfsSchema.getQNamePrefixToNamespaceMap().containsKey(entry.getKey())) {
-                    wfsSchema.getQNamePrefixToNamespaceMap().put(entry.getKey(), entry.getValue());
-                }
-            }
+            if (!this.dynamicFeatureTypeSchema) {
+				//build the schema for the types in the single namespace (and don't clean them, they are not dynamic)
+				XSDSchema schema = buildSchemaInternal(
+						new FeatureTypeInfo[] { meta }, null, false);
+				//add the types + elements to the wfs schema
+				for (Iterator<XSDTypeDefinition> t = schema
+						.getTypeDefinitions().iterator(); t.hasNext();) {
+					wfsSchema.getTypeDefinitions().add(t.next());
+				}
+				for (Iterator<XSDElementDeclaration> e = schema
+						.getElementDeclarations().iterator(); e.hasNext();) {
+					wfsSchema.getElementDeclarations().add(e.next());
+				}
+				// add secondary namespaces from catalog
+				for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) schema
+						.getQNamePrefixToNamespaceMap().entrySet()) {
+					if (!wfsSchema.getQNamePrefixToNamespaceMap().containsKey(
+							entry.getKey())) {
+						wfsSchema.getQNamePrefixToNamespaceMap().put(
+								entry.getKey(), entry.getValue());
+					}
+				}
+			}
         }
 
         return wfsSchema;
