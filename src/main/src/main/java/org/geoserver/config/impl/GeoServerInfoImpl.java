@@ -65,7 +65,7 @@ public class GeoServerInfoImpl implements GeoServerInfo {
     @Deprecated
     protected Boolean verboseExceptions;
     @Deprecated
-    protected Boolean dynamicFeatureTypeSchemas;    
+    protected Boolean dynamicFeatureTypeSchema;    
 
     private ResourceErrorHandling resourceErrorHandling;
 
@@ -417,9 +417,9 @@ public class GeoServerInfoImpl implements GeoServerInfo {
             setVerboseExceptions(verboseExceptions);
             verboseExceptions = null;
         }
-        if (dynamicFeatureTypeSchemas != null) {
-            setDynamicFeatureTypeSchema(dynamicFeatureTypeSchemas);
-            dynamicFeatureTypeSchemas = null;
+        if (dynamicFeatureTypeSchema != null) {
+            setDynamicFeatureTypeSchema(dynamicFeatureTypeSchema);
+            dynamicFeatureTypeSchema = null;
         }        
         return this;
     }

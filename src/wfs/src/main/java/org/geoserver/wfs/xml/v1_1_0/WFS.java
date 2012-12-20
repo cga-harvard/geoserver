@@ -310,9 +310,9 @@ public class WFS extends XSD {
      */
     protected XSDSchema buildSchema() throws IOException {
         XSDSchema wfsSchema = super.buildSchema();
-        if (!schemaBuilder.getDynamicFeatureTypeSchema()) {
+        //if (!schemaBuilder.getDynamicFeatureTypeSchema()) {
         	wfsSchema = schemaBuilder.addApplicationTypes(wfsSchema);
-        }
+        //}
         return wfsSchema;
     }
     
