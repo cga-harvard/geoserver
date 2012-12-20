@@ -58,6 +58,7 @@ public class WFSConfiguration extends Configuration {
      */
     static Logger LOGGER = Logging.getLogger( "org.geoserver.wfs");
 
+    protected boolean dynamicFeatureTypeSchema = false;
     
     Catalog catalog;
     FeatureTypeSchemaBuilder schemaBuilder;
@@ -67,7 +68,8 @@ public class WFSConfiguration extends Configuration {
 
         this.catalog = catalog;
         this.schemaBuilder = schemaBuilder;
-
+        this.dynamicFeatureTypeSchema = schemaBuilder.getDynamicFeatureTypeSchema();
+        
         catalog.addListener(new CatalogListener() {
 
             public void handleAddEvent(CatalogAddEvent event) {
@@ -169,7 +171,7 @@ public class WFSConfiguration extends Configuration {
         //seed the cache with entries from the catalog
         FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
             .getComponentInstanceOfType(FeatureTypeCache.class);
-
+        if (!this.dynamicFeatureTypeSchema) {
         Collection featureTypes = catalog.getFeatureTypes();
         for (Iterator f = featureTypes.iterator(); f.hasNext();) {
             FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
@@ -177,7 +179,6 @@ public class WFSConfiguration extends Configuration {
                 continue;
             }
 
-            
             FeatureType featureType =  null;
             try {
                 featureType = meta.getFeatureType();
@@ -188,6 +189,7 @@ public class WFSConfiguration extends Configuration {
             }
 
             featureTypeCache.put(featureType);
+        }
         }
     }
 
