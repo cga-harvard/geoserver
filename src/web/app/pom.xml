@@ -258,6 +258,7 @@
           -->
         </configuration>
       </plugin>
+<<<<<<< HEAD
 	  <plugin>
 		<inherited>true</inherited>
 		<groupId>org.apache.maven.plugins</groupId>
@@ -289,6 +290,28 @@
 			</execution>
 		</executions>
 	</plugin>
+=======
+      <!-- 
+      <plugin>
+        <inherited>true</inherited>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <configuration>
+          <warName>geoserver</warName>
+          <webappDirectory>${project.build.directory}/geoserver</webappDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>install</phase>
+            <goals>
+              <goal>war</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+       -->
+      
+>>>>>>> 9befd2b... Add geoserver-geonode-ext
     </plugins>
   </build>
   

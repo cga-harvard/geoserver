@@ -77,6 +77,14 @@
       <enabled>false</enabled>
     </snapshots>
   </repository>
+  
+
+  <repository>
+      <id>org.mapfish</id>
+      <url>http://dev.mapfish.org/maven/repository</url>
+  </repository>
+
+  
  </repositories>
 
  <pluginRepositories>
@@ -167,7 +175,7 @@
     <groupId>org.geoserver.web</groupId>
     <artifactId>web-core</artifactId>
     <version>${gs.version}</version>
-   </dependency>
+   </dependency> 
    <dependency>
     <groupId>org.geotools</groupId>
     <artifactId>gt-geotools</artifactId>
@@ -1089,6 +1097,12 @@
        <include>**/*</include>
      </includes>
    </resource>
+   <resource>
+     <directory>${basedir}/src/main/webapp</directory>
+     <includes>
+       <include>**/*</include>
+     </includes>
+   </resource>   
   </resources>
   <testResources>
    <testResource>
@@ -1471,6 +1485,7 @@
   <module>web</module>
   <module>community</module>
   <module>extension</module>
+  <module>geoserver-geonode-ext</module>
  </modules>
 
  <properties>
