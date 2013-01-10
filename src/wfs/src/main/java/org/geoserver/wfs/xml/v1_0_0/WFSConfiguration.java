@@ -172,24 +172,26 @@ public class WFSConfiguration extends Configuration {
         FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
             .getComponentInstanceOfType(FeatureTypeCache.class);
         if (!this.dynamicFeatureTypeSchema) {
-        Collection featureTypes = catalog.getFeatureTypes();
-        for (Iterator f = featureTypes.iterator(); f.hasNext();) {
-            FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
-            if ( !meta.enabled() ) {
-                continue;
-            }
+        	Collection featureTypes = catalog.getFeatureTypes();
+        	for (Iterator f = featureTypes.iterator(); f.hasNext();) {
+        		FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
+        		if ( !meta.enabled() ) {
+        			continue;
+        		}
 
-            FeatureType featureType =  null;
-            try {
-                featureType = meta.getFeatureType();
-            } catch(Exception e) {
-                LOGGER.log(Level.WARNING, "Could not load underlying feature type for type " 
+        		FeatureType featureType =  null;
+        		try {
+        			featureType = meta.getFeatureType();
+        		} catch(Exception e) {
+        			LOGGER.log(Level.WARNING, "Could not load underlying feature type for type " 
                         + meta.getName(), e);
-                continue;
-            }
+        			continue;
+        		}
 
-            featureTypeCache.put(featureType);
-        }
+        		featureTypeCache.put(featureType);
+        	}
+        } else {
+        	schemaBuilder.setContext(context);
         }
     }
 

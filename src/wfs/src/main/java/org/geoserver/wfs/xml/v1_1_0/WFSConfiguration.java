@@ -79,13 +79,14 @@ public class WFSConfiguration extends Configuration {
     
     protected boolean dynamicFeatureTypeSchema = false;
 
+
     public WFSConfiguration(GeoServer geoServer, FeatureTypeSchemaBuilder schemaBuilder, final WFS wfs) {
         super( wfs );
 
         this.catalog = geoServer.getCatalog();        
         this.schemaBuilder = schemaBuilder;
         this.dynamicFeatureTypeSchema = geoServer.getSettings().isDynamicFeatureTypeSchema();
-        
+             
         
         catalog.addListener(new CatalogListener() {
 
@@ -249,6 +250,8 @@ public class WFSConfiguration extends Configuration {
         FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
             .getComponentInstanceOfType(FeatureTypeCache.class);
 
+        
+        
         if (!this.dynamicFeatureTypeSchema) {
         	Collection featureTypes = catalog.getFeatureTypes();
         	for (Iterator f = featureTypes.iterator(); f.hasNext();) {
@@ -268,6 +271,8 @@ public class WFSConfiguration extends Configuration {
 
         		featureTypeCache.put(featureType);
         	}
+        } else {
+        	schemaBuilder.setContext(context);
         }
     }
 
