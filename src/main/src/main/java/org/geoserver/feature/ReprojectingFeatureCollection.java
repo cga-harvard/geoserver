@@ -98,6 +98,7 @@ public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
         super(delegate);
 
         this.target = target;
+        Object wtf = delegate.getSchema();
         this.schema = FeatureTypes.transform(delegate.getSchema(), target);
 
         // create transform cache
