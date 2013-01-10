@@ -232,9 +232,7 @@ public final class WFS extends XSD {
      */
     protected XSDSchema buildSchema() throws IOException {
         XSDSchema wfsSchema = super.buildSchema();
-        //if (!schemaBuilder.getDynamicFeatureTypeSchema()) {
-        	wfsSchema = schemaBuilder.addApplicationTypes(wfsSchema);
-        //}
+        wfsSchema = schemaBuilder.addApplicationTypes(wfsSchema);
         return wfsSchema;
     }
      
