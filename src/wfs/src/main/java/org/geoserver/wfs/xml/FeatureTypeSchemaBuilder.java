@@ -173,7 +173,11 @@ public abstract class FeatureTypeSchemaBuilder {
 
         for (int i = 0; i < featureTypeInfos.length; i++) {
         	
-        	if (this.dynamicFeatureTypeSchema) {
+        	/*
+        	 * If context has been assigned from WFSConfiguration (on update/insert),
+        	 * retrieve FeatureTypeCache instance and add the current FeatureType to it.
+        	 */
+        	if (this.dynamicFeatureTypeSchema && this.context != null) {
         		//seed the cache with entries from the catalog
         		FeatureType ft = featureTypeInfos[i].getFeatureType();
         		FeatureTypeCache featureTypeCache = (FeatureTypeCache) this.context
@@ -532,7 +536,10 @@ public abstract class FeatureTypeSchemaBuilder {
             String namespaceURI = meta.getNamespace().getURI();
             wfsSchema.getQNamePrefixToNamespaceMap().put(prefix, namespaceURI);
 
-            
+            /**
+             * This retrieves schema for all featuretypes.  If dynamicFeatureTypeSchema is true,
+             * featuretype schema will be retrieved as needed inside buildSchemaInternal() instead.
+             */
             if (!this.dynamicFeatureTypeSchema) {
 				//build the schema for the types in the single namespace (and don't clean them, they are not dynamic)
 				XSDSchema schema = buildSchemaInternal(
