@@ -245,14 +245,16 @@ public class WFSConfiguration extends Configuration {
         context.registerComponentInstance(catalog);
         context.registerComponentImplementation(PropertyTypePropertyExtractor.class);
         context.registerComponentInstance(getSrsSyntax());
-
-        //seed the cache with entries from the catalog
-        FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
-            .getComponentInstanceOfType(FeatureTypeCache.class);
-
         
-        
+        /*
+         * Normally this is done for all featuretypes when a WFS call is first made.
+         * This can be a problem with thousands of featuretypes.
+         */
         if (!this.dynamicFeatureTypeSchema) {
+            //seed the cache with entries from the catalog
+            FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
+                .getComponentInstanceOfType(FeatureTypeCache.class);
+            
         	Collection featureTypes = catalog.getFeatureTypes();
         	for (Iterator f = featureTypes.iterator(); f.hasNext();) {
         		FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
@@ -272,6 +274,10 @@ public class WFSConfiguration extends Configuration {
         		featureTypeCache.put(featureType);
         	}
         } else {
+        	/*
+        	 * Set context to schemaBuilder so FeatureTypeCache can be called
+        	 * from there, and then add featureType to it there.
+        	 */
         	schemaBuilder.setContext(context);
         }
     }

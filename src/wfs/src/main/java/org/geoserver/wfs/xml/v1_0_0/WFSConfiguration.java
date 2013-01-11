@@ -166,12 +166,13 @@ public class WFSConfiguration extends Configuration {
         context.registerComponentInstance(new WFSHandlerFactory(catalog, schemaBuilder));
         context.registerComponentInstance(catalog);
         context.registerComponentImplementation(PropertyTypePropertyExtractor.class);
+       
         
-        //TODO: this code is copied from the 1.1 configuration, FACTOR IT OUT!!!
-        //seed the cache with entries from the catalog
-        FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
-            .getComponentInstanceOfType(FeatureTypeCache.class);
         if (!this.dynamicFeatureTypeSchema) {
+            //TODO: this code is copied from the 1.1 configuration, FACTOR IT OUT!!!
+            //seed the cache with entries from the catalog
+            FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
+                .getComponentInstanceOfType(FeatureTypeCache.class);
         	Collection featureTypes = catalog.getFeatureTypes();
         	for (Iterator f = featureTypes.iterator(); f.hasNext();) {
         		FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
@@ -191,6 +192,10 @@ public class WFSConfiguration extends Configuration {
         		featureTypeCache.put(featureType);
         	}
         } else {
+        	/*
+        	 * Set context to schemaBuilder so FeatureTypeCache can be called
+        	 * from there, and then add featureType to it there.
+        	 */
         	schemaBuilder.setContext(context);
         }
     }

@@ -117,8 +117,8 @@ public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
             transformers.put(source, transformer);
         } else {
         	//Does anything really bad happen without this? Will try without it.
-        	LOGGER.log(Level.SEVERE, "Source was null in trying to create a reprojected feature collection!");
-            //throw new RuntimeException("Source was null in trying to create a reprojected feature collection!");
+        	//LOGGER.log(Level.SEVERE, "Source was null in trying to create a reprojected feature collection!");
+            throw new RuntimeException("Source was null in trying to create a reprojected feature collection!");
         }
     }
     
