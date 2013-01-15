@@ -24,12 +24,14 @@ import org.geotools.filter.spatial.DefaultCRSFilterVisitor;
 import org.geotools.filter.spatial.ReprojectingFilterVisitor;
 import org.geotools.geometry.jts.GeometryCoordinateSequenceTransformer;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.gml2.FeatureTypeCache;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
+import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.referencing.FactoryException;
@@ -106,6 +108,7 @@ public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
 
         // cache "default" transform
         CoordinateReferenceSystem source = delegate.getSchema().getCoordinateReferenceSystem();
+        
 
         if (source != null) {
             MathTransform2D tx = (MathTransform2D) ReferencingFactoryFinder
@@ -117,8 +120,8 @@ public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
             transformers.put(source, transformer);
         } else {
         	//Does anything really bad happen without this? Will try without it.
-        	//LOGGER.log(Level.SEVERE, "Source was null in trying to create a reprojected feature collection!");
-            throw new RuntimeException("Source was null in trying to create a reprojected feature collection!");
+        	LOGGER.log(Level.SEVERE, "Source was null in trying to create a reprojected feature collection!");
+            //throw new RuntimeException("Source was null in trying to create a reprojected feature collection!");
         }
     }
     
