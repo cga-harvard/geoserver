@@ -55,33 +55,6 @@ SELECT INTO ct "django_content_type"."id"
 	WHERE ("django_content_type"."model" = E'layer'
 	AND "django_content_type"."app_label" = E'maps' );
 
--- generic role, read-write
-PERFORM "core_genericobjectrolemapping"."object_id"
-	FROM "core_genericobjectrolemapping"
-	INNER JOIN "core_objectrole"
-	ON ("core_genericobjectrolemapping"."role_id" = "core_objectrole"."id")
-	INNER JOIN "core_objectrole_permissions"
-	ON ("core_objectrole"."id" = "core_objectrole_permissions"."objectrole_id")
-	WHERE ("core_genericobjectrolemapping"."subject" = any(roles)
-	AND "core_objectrole_permissions"."permission_id" = change_perm
-	AND "core_genericobjectrolemapping"."object_ct_id" = ct
-	AND "core_genericobjectrolemapping"."object_id" = layer.id
-	);
-if (FOUND) then return 'gr-rw'; end if;
-
--- generic role, read-only
-PERFORM "core_genericobjectrolemapping"."object_id"
-	FROM "core_genericobjectrolemapping"
-	INNER JOIN "core_objectrole"
-	ON ("core_genericobjectrolemapping"."role_id" = "core_objectrole"."id")
-	INNER JOIN "core_objectrole_permissions"
-	ON ("core_objectrole"."id" = "core_objectrole_permissions"."objectrole_id")
-	WHERE ("core_genericobjectrolemapping"."subject" = any(roles)
-	AND "core_objectrole_permissions"."permission_id" = view_perm
-	AND "core_genericobjectrolemapping"."object_ct_id" = ct
-	AND "core_genericobjectrolemapping"."object_id" = layer.id
-	);
-if (FOUND) then return 'gr-ro'; end if;
 
 if (user_name IS NOT NULL) then
 	-- user role, read-write
@@ -112,6 +85,37 @@ if (user_name IS NOT NULL) then
 		);
 	if (FOUND) then return 'ur-ro'; end if;
 end if;
+
+
+-- generic role, read-write
+PERFORM "core_genericobjectrolemapping"."object_id"
+	FROM "core_genericobjectrolemapping"
+	INNER JOIN "core_objectrole"
+	ON ("core_genericobjectrolemapping"."role_id" = "core_objectrole"."id")
+	INNER JOIN "core_objectrole_permissions"
+	ON ("core_objectrole"."id" = "core_objectrole_permissions"."objectrole_id")
+	WHERE ("core_genericobjectrolemapping"."subject" = any(roles)
+	AND "core_objectrole_permissions"."permission_id" = change_perm
+	AND "core_genericobjectrolemapping"."object_ct_id" = ct
+	AND "core_genericobjectrolemapping"."object_id" = layer.id
+	);
+if (FOUND) then return 'gr-rw'; end if;
+
+-- generic role, read-only
+PERFORM "core_genericobjectrolemapping"."object_id"
+	FROM "core_genericobjectrolemapping"
+	INNER JOIN "core_objectrole"
+	ON ("core_genericobjectrolemapping"."role_id" = "core_objectrole"."id")
+	INNER JOIN "core_objectrole_permissions"
+	ON ("core_objectrole"."id" = "core_objectrole_permissions"."objectrole_id")
+	WHERE ("core_genericobjectrolemapping"."subject" = any(roles)
+	AND "core_objectrole_permissions"."permission_id" = view_perm
+	AND "core_genericobjectrolemapping"."object_ct_id" = ct
+	AND "core_genericobjectrolemapping"."object_id" = layer.id
+	);
+if (FOUND) then return 'gr-ro'; end if;
+
+
 
 -- uh oh, nothing found
 return 'nf';
