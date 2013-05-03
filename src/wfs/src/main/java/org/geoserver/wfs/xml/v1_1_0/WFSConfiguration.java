@@ -77,7 +77,7 @@ public class WFSConfiguration extends Configuration {
     protected FeatureTypeSchemaBuilder schemaBuilder;
     
     
-    protected boolean dynamicFeatureTypeSchema = false;
+    protected boolean dynamicFeatureTypeSchema;
 
 
     public WFSConfiguration(GeoServer geoServer, FeatureTypeSchemaBuilder schemaBuilder, final WFS wfs) {
@@ -85,8 +85,7 @@ public class WFSConfiguration extends Configuration {
 
         this.catalog = geoServer.getCatalog();        
         this.schemaBuilder = schemaBuilder;
-        this.dynamicFeatureTypeSchema = geoServer.getSettings().isDynamicFeatureTypeSchema();
-             
+        this.dynamicFeatureTypeSchema = schemaBuilder.getDynamicFeatureTypeSchema();
         
         catalog.addListener(new CatalogListener() {
 

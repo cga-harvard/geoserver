@@ -72,7 +72,7 @@ public class DatabaseSecurityClient implements GeoNodeSecurityClient {
         // these can be stored longer maybe? just in case, expire this cache
         // after 1 day
         authenticationCache = CacheBuilder.newBuilder().
-                maximumSize(100).expireAfterWrite(365, TimeUnit.DAYS).build();
+                maximumSize(100).expireAfterWrite(1, TimeUnit.DAYS).build();
         // the idea w/ expiration after access is that if someone has access to
         // a layer, it will probably not change quickly after that. cache
         // extension makes the standard pan/zoom or time playback perform much
@@ -163,7 +163,6 @@ public class DatabaseSecurityClient implements GeoNodeSecurityClient {
         }
         return auth;
     }
-
     
     String authorize(String user, String layerName) {
         Connection conn = null;

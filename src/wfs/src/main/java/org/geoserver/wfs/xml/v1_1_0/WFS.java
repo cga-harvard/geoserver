@@ -271,8 +271,6 @@ public class WFS extends XSD {
     /** schema type builder */
     FeatureTypeSchemaBuilder schemaBuilder;
     
-    boolean dynamicFeatureTypeSchema = false;
-    
     public WFS(FeatureTypeSchemaBuilder schemaBuilder) {
     	
         this.schemaBuilder = schemaBuilder;
@@ -310,9 +308,7 @@ public class WFS extends XSD {
      */
     protected XSDSchema buildSchema() throws IOException {
         XSDSchema wfsSchema = super.buildSchema();
-        //if (!schemaBuilder.getDynamicFeatureTypeSchema()) {
-        	wfsSchema = schemaBuilder.addApplicationTypes(wfsSchema);
-        //}
+        wfsSchema = schemaBuilder.addApplicationTypes(wfsSchema);
         return wfsSchema;
     }
     

@@ -58,7 +58,7 @@ public class WFSConfiguration extends Configuration {
      */
     static Logger LOGGER = Logging.getLogger( "org.geoserver.wfs");
 
-    protected boolean dynamicFeatureTypeSchema = false;
+    protected boolean dynamicFeatureTypeSchema;
     
     Catalog catalog;
     FeatureTypeSchemaBuilder schemaBuilder;
@@ -168,7 +168,7 @@ public class WFSConfiguration extends Configuration {
         context.registerComponentImplementation(PropertyTypePropertyExtractor.class);
        
         
-        if (!this.dynamicFeatureTypeSchema) {
+        if (this.dynamicFeatureTypeSchema) {
             //TODO: this code is copied from the 1.1 configuration, FACTOR IT OUT!!!
             //seed the cache with entries from the catalog
             FeatureTypeCache featureTypeCache = (FeatureTypeCache) context

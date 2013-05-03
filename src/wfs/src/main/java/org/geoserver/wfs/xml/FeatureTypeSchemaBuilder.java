@@ -109,7 +109,7 @@ public abstract class FeatureTypeSchemaBuilder {
     protected MutablePicoContainer context;
     
     protected FeatureTypeSchemaBuilder(GeoServer gs) {
-    	this.dynamicFeatureTypeSchema = gs.getGlobal().isDynamicFeatureTypeSchema();
+    	this.dynamicFeatureTypeSchema = gs.getSettings().isDynamicFeatureTypeSchema();
         this.wfs = gs.getService( WFSInfo.class );
         this.catalog = gs.getCatalog();
         this.resourceLoader = gs.getCatalog().getResourceLoader();
@@ -151,8 +151,6 @@ public abstract class FeatureTypeSchemaBuilder {
         boolean resolveAppSchemaImports, boolean scheduleSchemaCleanup) throws IOException {
         // build the schema and make sure to schedule it for destruction at the end of the request
         XSDSchema schema = buildSchemaInternal(featureTypeInfos, baseUrl, resolveAppSchemaImports);
-        
-        
         if(schema != null && scheduleSchemaCleanup) {
             SchemaCleanerCallback.addSchema(schema);
         }
@@ -352,38 +350,7 @@ public abstract class FeatureTypeSchemaBuilder {
                 }
             }
         }
-
-//        for (Iterator i = schema.getContents().iterator(); i.hasNext();) {
-//            Object o = i.next();
-//            if (o instanceof XSDImport) {
-//                ((XSDSchemaImpl)((XSDImport)o).getResolvedSchema()).imported((XSDImport)o);
-//                
-//            }
-//        }
-        
-        
-//        if (this.dynamicFeatureTypeSchema) {
-//        	XSDSchema wfsSchema = GML.getInstance().getSchema();
-//			//add the types + elements to the wfs schema
-//			for (Iterator<XSDTypeDefinition> t = schema
-//					.getTypeDefinitions().iterator(); t.hasNext();) {
-//				wfsSchema.getTypeDefinitions().add(t.next());
-//			}
-//			for (Iterator<XSDElementDeclaration> e = schema
-//					.getElementDeclarations().iterator(); e.hasNext();) {
-//				wfsSchema.getElementDeclarations().add(e.next());
-//			}
-//			// add secondary namespaces from catalog
-//			for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) schema
-//					.getQNamePrefixToNamespaceMap().entrySet()) {
-//				if (!wfsSchema.getQNamePrefixToNamespaceMap().containsKey(
-//						entry.getKey())) {
-//					wfsSchema.getQNamePrefixToNamespaceMap().put(
-//							entry.getKey(), entry.getValue());
-//				}
-//			}
-//		}        
-        
+           
         return schema;
     }
 
