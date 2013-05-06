@@ -325,8 +325,16 @@ public class DataStoreFileResource extends StoreFileResource {
                         
                         //schema does not exist, create it by first creating an instance of 
                         // the source datastore and copying over its schema
-                        ds.createSchema(source.getSchema(featureTypeName));
-                        featureType = source.getSchema(featureTypeName);
+                        try {
+                        	ds.createSchema(source.getSchema(featureTypeName));
+                        	featureType = source.getSchema(featureTypeName);
+                        } catch (IOException ioe) {
+                        	//clean up the files if we can
+                        	if (isInlineUpload(method) && canRemoveFiles) {
+                        		deleteDirectory(uploadedFile);
+                        	}
+                        	throw ioe;
+                        }
                     }
     
                     FeatureSource featureSource = ds.getFeatureSource(featureTypeName);
@@ -457,16 +465,7 @@ public class DataStoreFileResource extends StoreFileResource {
         
         //clean up the files if we can
         if (isInlineUpload(method) && canRemoveFiles) {
-            if (uploadedFile.isFile()) uploadedFile = uploadedFile.getParentFile();
-            try {
-                FileUtils.deleteDirectory(uploadedFile);
-            } 
-            catch (IOException e) {
-                LOGGER.info("Unable to delete " + uploadedFile.getAbsolutePath());
-                if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.log(Level.FINE, "", e);
-                }
-            }
+            deleteDirectory(uploadedFile);
         }
     }
 
@@ -568,4 +567,18 @@ public class DataStoreFileResource extends StoreFileResource {
         info.getConnectionParameters().putAll(params);
         
     }
+    
+    void deleteDirectory(File uploadedFile ) {
+    		if (uploadedFile.isFile()) uploadedFile = uploadedFile.getParentFile();
+    		try {
+    			FileUtils.deleteDirectory(uploadedFile);
+    		} 
+    		catch (IOException ie) {
+    			LOGGER.info("Unable to delete " + uploadedFile.getAbsolutePath());
+    			if (LOGGER.isLoggable(Level.FINE)) {
+    				LOGGER.log(Level.FINE, "", ie);
+    			}
+    		}
+    	}
+   
 }
