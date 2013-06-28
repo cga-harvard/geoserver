@@ -272,6 +272,7 @@ public class WFS extends XSD {
     FeatureTypeSchemaBuilder schemaBuilder;
     
     public WFS(FeatureTypeSchemaBuilder schemaBuilder) {
+    	
         this.schemaBuilder = schemaBuilder;
     }
     

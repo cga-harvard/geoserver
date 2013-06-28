@@ -18,4 +18,5 @@
   <verbose>true</verbose>
   <verboseExceptions>false</verboseExceptions>
   <updateSequence>0</updateSequence>
+  <dynamicFeatureTypeSchema>true</dynamicFeatureTypeSchema>
 </global>

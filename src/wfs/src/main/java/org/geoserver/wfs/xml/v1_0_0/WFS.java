@@ -5,11 +5,13 @@
 package org.geoserver.wfs.xml.v1_0_0;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Set;
 
 import javax.xml.namespace.QName;
 
 import org.eclipse.xsd.XSDSchema;
+import org.geoserver.catalog.FeatureTypeInfo;
 import org.geoserver.wfs.xml.FeatureTypeSchemaBuilder;
 import org.geotools.filter.v1_0.OGC;
 import org.geotools.gml2.GML;
@@ -227,9 +229,10 @@ public final class WFS extends XSD {
      */
     protected XSDSchema buildSchema() throws IOException {
         XSDSchema wfsSchema = super.buildSchema();
+        
         wfsSchema = schemaBuilder.addApplicationTypes(wfsSchema);
+        
         return wfsSchema;
     }
-    
-    
+     
 }

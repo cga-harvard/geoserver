@@ -77,6 +77,14 @@
       <enabled>false</enabled>
     </snapshots>
   </repository>
+  
+
+  <repository>
+      <id>org.mapfish</id>
+      <url>http://dev.mapfish.org/maven/repository</url>
+  </repository>
+
+  
  </repositories>
 
  <pluginRepositories>
@@ -167,7 +175,7 @@
     <groupId>org.geoserver.web</groupId>
     <artifactId>web-core</artifactId>
     <version>${gs.version}</version>
-   </dependency>
+   </dependency> 
    <dependency>
     <groupId>org.geotools</groupId>
     <artifactId>gt-geotools</artifactId>
@@ -1089,6 +1097,12 @@
        <include>**/*</include>
      </includes>
    </resource>
+   <resource>
+     <directory>${basedir}/src/main/webapp</directory>
+     <includes>
+       <include>**/*</include>
+     </includes>
+   </resource>   
   </resources>
   <testResources>
    <testResource>
@@ -1220,7 +1234,7 @@
       <descriptor>release/ext-xslt.xml</descriptor>
       <descriptor>release/ext-inspire.xml</descriptor>
      </descriptors>
-     <finalName>geoserver-2.3-SNAPSHOT</finalName>
+     <finalName>geoserver-2.3.1</finalName>
      <outputDirectory>${project.build.directory}/release</outputDirectory>
     </configuration>
    </plugin>
@@ -1473,12 +1487,13 @@
   <module>web</module>
   <module>community</module>
   <module>extension</module>
+  <module>geoserver-geonode-ext</module>
  </modules>
 
  <properties>
   <gs.version>2.3-SNAPSHOT</gs.version>
   <gt.version>9-SNAPSHOT</gt.version>
-  <gwc.version>1.4-SNAPSHOT</gwc.version>
+  <gwc.version>1.4-M20130509a</gwc.version>
   <spring.version>3.1.1.RELEASE</spring.version>
   <spring.security.version>3.1.0.RELEASE</spring.security.version> 
   <poi.version>3.8</poi.version>

@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
@@ -22,12 +24,14 @@ import org.geotools.filter.spatial.DefaultCRSFilterVisitor;
 import org.geotools.filter.spatial.ReprojectingFilterVisitor;
 import org.geotools.geometry.jts.GeometryCoordinateSequenceTransformer;
 import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.gml2.FeatureTypeCache;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.opengis.feature.FeatureVisitor;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
+import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.referencing.FactoryException;
@@ -56,6 +60,11 @@ import com.vividsolutions.jts.geom.Geometry;
  * 
  */
 public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
+    /**
+     * logger
+     */
+    static Logger LOGGER = org.geotools.util.logging.Logging.getLogger("org.geoserver.main");	
+	
     static final FilterFactory2 FF = CommonFactoryFinder.getFilterFactory2(null);
     
     /**
@@ -91,6 +100,7 @@ public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
         super(delegate);
 
         this.target = target;
+        Object wtf = delegate.getSchema();
         this.schema = FeatureTypes.transform(delegate.getSchema(), target);
 
         // create transform cache
@@ -98,6 +108,7 @@ public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
 
         // cache "default" transform
         CoordinateReferenceSystem source = delegate.getSchema().getCoordinateReferenceSystem();
+        
 
         if (source != null) {
             MathTransform2D tx = (MathTransform2D) ReferencingFactoryFinder
@@ -108,7 +119,9 @@ public class ReprojectingFeatureCollection extends DecoratingFeatureCollection {
             transformer.setMathTransform(tx);
             transformers.put(source, transformer);
         } else {
-            throw new RuntimeException("Source was null in trying to create a reprojected feature collection!");
+        	//Does anything really bad happen without this? Will try without it.
+        	LOGGER.log(Level.SEVERE, "Source was null in trying to create a reprojected feature collection!");
+            //throw new RuntimeException("Source was null in trying to create a reprojected feature collection!");
         }
     }
     

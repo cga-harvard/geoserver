@@ -10,6 +10,7 @@ import static org.geoserver.ows.util.ResponseUtils.params;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +50,7 @@ import org.geoserver.platform.GeoServerResourceLoader;
 import org.geoserver.wfs.GMLInfo;
 import org.geoserver.wfs.WFSInfo;
 import org.geotools.feature.NameImpl;
+import org.geotools.gml2.FeatureTypeCache;
 import org.geotools.gml2.GMLConfiguration;
 import org.geotools.gml3.v3_2.GML;
 import org.geotools.wfs.v2_0.WFS;
@@ -62,6 +64,7 @@ import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.Schema;
+import org.picocontainer.MutablePicoContainer;
 
 /**
  * Builds a {@link org.eclipse.xsd.XSDSchema} from {@link FeatureTypeInfo}
@@ -102,8 +105,11 @@ public abstract class FeatureTypeSchemaBuilder {
     protected String gmlPrefix;
     protected Configuration xmlConfiguration;
     protected volatile XSDElementDeclaration featureSubGroupElement;
-
+    protected boolean dynamicFeatureTypeSchema;
+    protected MutablePicoContainer context;
+    
     protected FeatureTypeSchemaBuilder(GeoServer gs) {
+    	this.dynamicFeatureTypeSchema = gs.getSettings().isDynamicFeatureTypeSchema();
         this.wfs = gs.getService( WFSInfo.class );
         this.catalog = gs.getCatalog();
         this.resourceLoader = gs.getCatalog().getResourceLoader();
@@ -164,6 +170,19 @@ public abstract class FeatureTypeSchemaBuilder {
         HashMap ns2featureTypeInfos = new HashMap();
 
         for (int i = 0; i < featureTypeInfos.length; i++) {
+        	
+        	/*
+        	 * If context has been assigned from WFSConfiguration (on update/insert),
+        	 * retrieve FeatureTypeCache instance and add the current FeatureType to it.
+        	 */
+        	if (this.dynamicFeatureTypeSchema && this.context != null) {
+        		//seed the cache with entries from the catalog
+        		FeatureType ft = featureTypeInfos[i].getFeatureType();
+        		FeatureTypeCache featureTypeCache = (FeatureTypeCache) this.context
+                    .getComponentInstanceOfType(FeatureTypeCache.class);
+        		featureTypeCache.put(ft);
+        	}
+        	
             String prefix = featureTypeInfos[i].getNamespace().getPrefix();
             List l = (List) ns2featureTypeInfos.get(prefix);
 
@@ -331,17 +350,15 @@ public abstract class FeatureTypeSchemaBuilder {
                 }
             }
         }
-
-//        for (Iterator i = schema.getContents().iterator(); i.hasNext();) {
-//            Object o = i.next();
-//            if (o instanceof XSDImport) {
-//                ((XSDSchemaImpl)((XSDImport)o).getResolvedSchema()).imported((XSDImport)o);
-//                
-//            }
-//        }
+           
         return schema;
     }
 
+    
+    public boolean getDynamicFeatureTypeSchema() {
+        return this.dynamicFeatureTypeSchema;
+    }
+    
     protected void importGMLSchema(XSDSchema schema, XSDFactory factory, String baseUrl) {
         XSDImport imprt = factory.createXSDImport();
         imprt.setNamespace(gmlNamespace);
@@ -470,10 +487,10 @@ public abstract class FeatureTypeSchemaBuilder {
     /**
      * Adds types defined in the catalog to the provided schema.
      */
-    public XSDSchema addApplicationTypes( XSDSchema wfsSchema ) throws IOException {
+    public XSDSchema addApplicationTypes( XSDSchema wfsSchema) throws IOException {
         //incorporate application schemas into the wfs schema
         Collection<FeatureTypeInfo> featureTypeInfos = catalog.getFeatureTypes();
-
+    	
         for (Iterator<FeatureTypeInfo> i = featureTypeInfos.iterator(); i.hasNext();) {
             FeatureTypeInfo meta = i.next();
             
@@ -481,30 +498,38 @@ public abstract class FeatureTypeSchemaBuilder {
             if(!meta.enabled())
                 continue;
 
-            //build the schema for the types in the single namespace (and don't clean them, they are not dynamic)
-            XSDSchema schema = buildSchemaInternal(new FeatureTypeInfo[] { meta }, null, false);
-
             //declare the namespace
             String prefix = meta.getNamespace().getPrefix();
             String namespaceURI = meta.getNamespace().getURI();
             wfsSchema.getQNamePrefixToNamespaceMap().put(prefix, namespaceURI);
 
-            //add the types + elements to the wfs schema
-            for (Iterator<XSDTypeDefinition> t = schema.getTypeDefinitions().iterator(); t.hasNext();) {
-                wfsSchema.getTypeDefinitions().add(t.next());
-            }
-
-            for (Iterator<XSDElementDeclaration> e = schema.getElementDeclarations().iterator(); e.hasNext();) {
-                wfsSchema.getElementDeclarations().add(e.next());
-            }
-            
-            // add secondary namespaces from catalog
-            for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) schema.getQNamePrefixToNamespaceMap()
-                    .entrySet()) {
-                if (!wfsSchema.getQNamePrefixToNamespaceMap().containsKey(entry.getKey())) {
-                    wfsSchema.getQNamePrefixToNamespaceMap().put(entry.getKey(), entry.getValue());
-                }
-            }
+            /**
+             * This retrieves schema for all featuretypes.  If dynamicFeatureTypeSchema is true,
+             * featuretype schema will be retrieved as needed inside buildSchemaInternal() instead.
+             */
+            if (!this.dynamicFeatureTypeSchema) {
+				//build the schema for the types in the single namespace (and don't clean them, they are not dynamic)
+				XSDSchema schema = buildSchemaInternal(
+						new FeatureTypeInfo[] { meta }, null, false);
+				//add the types + elements to the wfs schema
+				for (Iterator<XSDTypeDefinition> t = schema
+						.getTypeDefinitions().iterator(); t.hasNext();) {
+					wfsSchema.getTypeDefinitions().add(t.next());
+				}
+				for (Iterator<XSDElementDeclaration> e = schema
+						.getElementDeclarations().iterator(); e.hasNext();) {
+					wfsSchema.getElementDeclarations().add(e.next());
+				}
+				// add secondary namespaces from catalog
+				for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) schema
+						.getQNamePrefixToNamespaceMap().entrySet()) {
+					if (!wfsSchema.getQNamePrefixToNamespaceMap().containsKey(
+							entry.getKey())) {
+						wfsSchema.getQNamePrefixToNamespaceMap().put(
+								entry.getKey(), entry.getValue());
+					}
+				}
+			}
         }
 
         return wfsSchema;
@@ -841,6 +866,10 @@ public abstract class FeatureTypeSchemaBuilder {
         }
 
         return null;
+    }
+    
+    public void setContext(MutablePicoContainer context) {
+    		this.context = context;
     }
 
     protected abstract XSDSchema gmlSchema();

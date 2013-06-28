@@ -27,4 +27,5 @@
   <updateSequence>19</updateSequence>
   <featureTypeCacheSize>0</featureTypeCacheSize>
   <globalServices>true</globalServices>
+  <dynamicFeatureTypeSchema>true</dynamicFeatureTypeSchema>
 </global>

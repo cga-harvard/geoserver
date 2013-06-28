@@ -75,12 +75,17 @@ public class WFSConfiguration extends Configuration {
      * Schema builder
      */
     protected FeatureTypeSchemaBuilder schemaBuilder;
+    
+    
+    protected boolean dynamicFeatureTypeSchema;
+
 
     public WFSConfiguration(GeoServer geoServer, FeatureTypeSchemaBuilder schemaBuilder, final WFS wfs) {
         super( wfs );
 
-        this.catalog = geoServer.getCatalog();
+        this.catalog = geoServer.getCatalog();        
         this.schemaBuilder = schemaBuilder;
+        this.dynamicFeatureTypeSchema = schemaBuilder.getDynamicFeatureTypeSchema();
         
         catalog.addListener(new CatalogListener() {
 
@@ -239,29 +244,40 @@ public class WFSConfiguration extends Configuration {
         context.registerComponentInstance(catalog);
         context.registerComponentImplementation(PropertyTypePropertyExtractor.class);
         context.registerComponentInstance(getSrsSyntax());
-
-        //seed the cache with entries from the catalog
-        FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
-            .getComponentInstanceOfType(FeatureTypeCache.class);
-
-        Collection featureTypes = catalog.getFeatureTypes();
-        for (Iterator f = featureTypes.iterator(); f.hasNext();) {
-            FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
-            if ( !meta.enabled() ) {
-                continue;
-            }
-
+        
+        /*
+         * Normally this is done for all featuretypes when a WFS call is first made.
+         * This can be a problem with thousands of featuretypes.
+         */
+        if (!this.dynamicFeatureTypeSchema) {
+            //seed the cache with entries from the catalog
+            FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
+                .getComponentInstanceOfType(FeatureTypeCache.class);
             
-            FeatureType featureType =  null;
-            try {
-                featureType = meta.getFeatureType();
-            } catch(Exception e) {
-                LOGGER.log(Level.WARNING, "Could not load underlying feature type for type " 
+        	Collection featureTypes = catalog.getFeatureTypes();
+        	for (Iterator f = featureTypes.iterator(); f.hasNext();) {
+        		FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
+        		if ( !meta.enabled() ) {
+        			continue;
+        		}
+            
+        		FeatureType featureType =  null;
+        		try {
+        			featureType = meta.getFeatureType();
+        		} catch(Exception e) {
+        			LOGGER.log(Level.WARNING, "Could not load underlying feature type for type " 
                         + meta.getName(), e);
-                continue;
-            }
+        			continue;
+        		}
 
-            featureTypeCache.put(featureType);
+        		featureTypeCache.put(featureType);
+        	}
+        } else {
+        	/*
+        	 * Set context to schemaBuilder so FeatureTypeCache can be called
+        	 * from there, and then add featureType to it there.
+        	 */
+        	schemaBuilder.setContext(context);
         }
     }
 
