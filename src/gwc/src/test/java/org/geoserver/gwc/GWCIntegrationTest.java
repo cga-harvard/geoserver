@@ -16,6 +16,7 @@ import static org.junit.Assert.fail;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Date;
 
@@ -23,6 +24,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.util.DateUtil;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.custommonkey.xmlunit.XMLUnit;
 import org.geoserver.catalog.Catalog;
 import org.geoserver.catalog.CatalogBuilder;
 import org.geoserver.catalog.FeatureTypeInfo;
@@ -54,6 +57,7 @@ import org.geowebcache.layer.TileLayer;
 import org.geowebcache.layer.TileLayerDispatcher;
 import org.junit.Before;
 import org.junit.Test;
+import org.w3c.dom.Document;
 
 import com.mockrunner.mock.web.MockHttpServletRequest;
 import com.mockrunner.mock.web.MockHttpServletResponse;
@@ -211,7 +215,8 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
      * If direct WMS integration is enabled, a GetMap requests that hits the regular WMS but matches
      * a gwc tile should return with the proper {@code geowebcache-tile-index} HTTP response header.
      */
-    @Test public void testDirectWMSIntegration() throws Exception {
+    @Test 
+    public void testDirectWMSIntegration() throws Exception {
         final GWC gwc = GWC.get();
         gwc.getConfig().setDirectWMSIntegrationEnabled(true);
 
@@ -233,13 +238,34 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
         assertEquals("image/png", response.getContentType());
     }
 
-    @Test public void testDirectWMSIntegrationResponseHeaders() throws Exception {
+    @Test 
+    public void testDirectWMSIntegrationResponseHeaders() throws Exception {
         final GWC gwc = GWC.get();
         gwc.getConfig().setDirectWMSIntegrationEnabled(true);
 
         final String layerName = BASIC_POLYGONS.getPrefix() + ":" + BASIC_POLYGONS.getLocalPart();
 
         String request = buildGetMap(true, layerName, "EPSG:4326", null) + "&tiled=true";
+        MockHttpServletResponse response = getAsServletResponse(request);
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals("image/png", response.getContentType());
+        assertEquals(layerName, response.getHeader("geowebcache-layer"));
+        assertEquals("[0, 0, 0]", response.getHeader("geowebcache-tile-index"));
+        assertEquals("-180.0,-90.0,0.0,90.0", response.getHeader("geowebcache-tile-bounds"));
+        assertEquals("EPSG:4326", response.getHeader("geowebcache-gridset"));
+        assertEquals("EPSG:4326", response.getHeader("geowebcache-crs"));
+    }
+    
+    @Test 
+    public void testDirectWMSIntegrationResponseHeaders13() throws Exception {
+        final GWC gwc = GWC.get();
+        gwc.getConfig().setDirectWMSIntegrationEnabled(true);
+
+        final String layerName = BASIC_POLYGONS.getPrefix() + ":" + BASIC_POLYGONS.getLocalPart();
+
+        String request = "wms?service=wms&version=1.3.0&request=GetMap&styles=&layers=" + layerName 
+                + "&srs=EPSG:4326&bbox=-90,-180,90,0&format=image/png&width=256&height=256&tiled=true";
         MockHttpServletResponse response = getAsServletResponse(request);
 
         assertEquals(200, response.getStatusCode());
@@ -550,7 +576,8 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
         quota.setQuotaStore("H2");
         gwc.saveDiskQuotaConfig(quota, null);
         GeoServerDataDirectory dd = GeoServerExtensions.bean(GeoServerDataDirectory.class);
-        assertNull("jdbc config should not be there", dd.findDataFile("gwc/geowebcache-diskquota-jdbc.xml"));
+        File jdbcConfigFile = dd.findDataFile("gwc/geowebcache-diskquota-jdbc.xml");
+        assertNull("jdbc config should not be there", jdbcConfigFile);
         File h2DefaultStore = dd.findDataFile("gwc/diskquota_page_store_h2");
         assertNotNull("jdbc store should be there", h2DefaultStore);
         assertTrue(getActualStore(provider) instanceof JDBCQuotaStore);
@@ -575,10 +602,23 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
         pool.setMaxOpenPreparedStatements(50);
         jdbc.setConnectionPool(pool);
         gwc.saveDiskQuotaConfig(quota, jdbc);
-        assertNotNull("jdbc config should be there", dd.findDataFile("gwc/geowebcache-diskquota-jdbc.xml"));
+        jdbcConfigFile = dd.findDataFile("gwc/geowebcache-diskquota-jdbc.xml");
+        assertNotNull("jdbc config should be there", jdbcConfigFile);
         assertNull("jdbc store should be there", dd.findDataFile("gwc/diskquota_page_store_h2"));
         File newQuotaStore = new File("./target/quota-h2.data.db");
         assertTrue(newQuotaStore.exists());
+        
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(jdbcConfigFile);
+            Document dom = dom(fis);
+            print(dom);
+            String storedPassword = XMLUnit.newXpathEngine().evaluate("/gwcJdbcConfiguration/connectionPool/password", dom);
+            // check the password has been encoded properly
+            assertTrue(storedPassword.startsWith("crypt1:"));
+        } finally {
+            IOUtils.closeQuietly(fis);
+        }
     }
 
     private QuotaStore getActualStore(ConfigurableQuotaStoreProvider provider)
