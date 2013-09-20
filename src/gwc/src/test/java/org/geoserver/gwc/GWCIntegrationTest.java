@@ -4,10 +4,17 @@
  */
 package org.geoserver.gwc;
 
-import static junit.framework.Assert.*;
-import static org.geoserver.data.test.MockData.*;
-import static org.geoserver.gwc.GWC.*;
+import static org.geoserver.data.test.MockData.BASIC_POLYGONS;
+import static org.geoserver.data.test.MockData.MPOINTS;
+import static org.geoserver.gwc.GWC.tileLayerName;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -17,11 +24,18 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.util.DateUtil;
 import org.apache.commons.io.FileUtils;
 import org.geoserver.catalog.Catalog;
+import org.geoserver.catalog.CatalogBuilder;
+import org.geoserver.catalog.FeatureTypeInfo;
+import org.geoserver.catalog.LayerGroupInfo;
 import org.geoserver.catalog.LayerInfo;
+import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.config.GeoServerDataDirectory;
 import org.geoserver.data.test.MockData;
 import org.geoserver.data.test.SystemTestData;
+import org.geoserver.gwc.config.GWCConfig;
 import org.geoserver.gwc.layer.CatalogConfiguration;
+import org.geoserver.gwc.layer.GeoServerTileLayer;
+import org.geoserver.gwc.layer.GeoServerTileLayerInfo;
 import org.geoserver.platform.GeoServerExtensions;
 import org.geoserver.test.GeoServerSystemTestSupport;
 import org.geowebcache.GeoWebCacheDispatcher;
@@ -31,8 +45,8 @@ import org.geowebcache.config.ConfigurationException;
 import org.geowebcache.diskquota.DiskQuotaConfig;
 import org.geowebcache.diskquota.QuotaStore;
 import org.geowebcache.diskquota.jdbc.JDBCConfiguration;
-import org.geowebcache.diskquota.jdbc.JDBCQuotaStore;
 import org.geowebcache.diskquota.jdbc.JDBCConfiguration.ConnectionPoolConfiguration;
+import org.geowebcache.diskquota.jdbc.JDBCQuotaStore;
 import org.geowebcache.grid.BoundingBox;
 import org.geowebcache.grid.GridSetBroker;
 import org.geowebcache.grid.GridSubset;
@@ -43,9 +57,12 @@ import org.junit.Test;
 
 import com.mockrunner.mock.web.MockHttpServletRequest;
 import com.mockrunner.mock.web.MockHttpServletResponse;
-import org.geoserver.gwc.layer.GeoServerTileLayer;
 
 public class GWCIntegrationTest extends GeoServerSystemTestSupport {
+    
+    static final String FLAT_LAYER_GROUP = "flatLayerGroup";
+    static final String NESTED_LAYER_GROUP = "nestedLayerGroup";
+    static final String CONTAINER_LAYER_GROUP = "containerLayerGroup";
 
     @Override
     protected void onSetUp(SystemTestData testData) throws Exception {
@@ -56,6 +73,10 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
     
     @Before
     public void resetLayers() throws Exception {
+        removeGroup(FLAT_LAYER_GROUP);
+        removeGroup(CONTAINER_LAYER_GROUP);
+        removeGroup(NESTED_LAYER_GROUP);
+        
         final String layerName = getLayerId(BASIC_POLYGONS);
         LayerInfo layerInfo = getCatalog().getLayerByName(layerName);
         if(layerInfo != null) {
@@ -63,9 +84,16 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
             getGeoServer().reload();
             
         }
-        
+
         revertLayer(BASIC_POLYGONS);
         revertLayer(MPOINTS);
+    }
+
+    private void removeGroup(String groupName) {
+        LayerGroupInfo lg = getCatalog().getLayerGroupByName(groupName);
+        if(lg != null) {
+            getCatalog().remove(lg);
+        }
     }
 
     @Test 
@@ -77,6 +105,107 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
         assertEquals(200, sr.getErrorCode());
         assertEquals("image/png", sr.getContentType());
     }
+    
+    @Test 
+    public void testCachingHeadersSingleLayer() throws Exception {
+        String layerId = getLayerId(MockData.BASIC_POLYGONS);
+        setCachingMetadata(layerId, true, 7200);
+        
+        MockHttpServletResponse sr = getAsServletResponse("gwc/service/wmts?request=GetTile&layer="
+                + layerId
+                + "&format=image/png&tilematrixset=EPSG:4326&tilematrix=EPSG:4326:0&tilerow=0&tilecol=0");
+        assertEquals(200, sr.getErrorCode());
+        assertEquals("image/png", sr.getContentType());
+        assertEquals("max-age=7200, must-revalidate", sr.getHeader("Cache-Control"));
+    }
+    
+    @Test 
+    public void testCachingHeadersSingleLayerNoHeaders() throws Exception {
+        String layerId = getLayerId(MockData.BASIC_POLYGONS);
+        setCachingMetadata(layerId, false, -1);
+        
+        MockHttpServletResponse sr = getAsServletResponse("gwc/service/wmts?request=GetTile&layer="
+                + layerId
+                + "&format=image/png&tilematrixset=EPSG:4326&tilematrix=EPSG:4326:0&tilerow=0&tilecol=0");
+        assertEquals(200, sr.getErrorCode());
+        assertEquals("image/png", sr.getContentType());
+        assertNull(sr.getHeader("Cache-Control"));
+    }
+    
+    @Test 
+    public void testCachingHeadersFlatLayerGroup() throws Exception {
+        // set two different caching headers for the two layers
+        String bpLayerId = getLayerId(MockData.BASIC_POLYGONS);
+        setCachingMetadata(bpLayerId, true, 7200);
+        String mpLayerId = getLayerId(MockData.MPOINTS);
+        setCachingMetadata(mpLayerId, true, 1000);
+        
+        // build a flat layer group with them
+        LayerGroupInfo lg = getCatalog().getFactory().createLayerGroup();
+        lg.setName(FLAT_LAYER_GROUP);
+        lg.getLayers().add(getCatalog().getLayerByName(bpLayerId));
+        lg.getLayers().add(getCatalog().getLayerByName(mpLayerId));
+        new CatalogBuilder(getCatalog()).calculateLayerGroupBounds(lg);
+        getCatalog().add(lg);        
+        
+        MockHttpServletResponse sr = getAsServletResponse("gwc/service/wmts?request=GetTile&layer="
+                + FLAT_LAYER_GROUP
+                + "&format=image/png&tilematrixset=EPSG:4326&tilematrix=EPSG:4326:0&tilerow=0&tilecol=0");
+        assertEquals(200, sr.getErrorCode());
+        assertEquals("image/png", sr.getContentType());
+        assertEquals("max-age=1000, must-revalidate", sr.getHeader("Cache-Control"));
+    }
+    
+    @Test 
+    public void testCachingHeadersNestedLayerGroup() throws Exception {
+        // set two different caching headers for the two layers
+        String bpLayerId = getLayerId(MockData.BASIC_POLYGONS);
+        setCachingMetadata(bpLayerId, true, 7200);
+        String mpLayerId = getLayerId(MockData.MPOINTS);
+        setCachingMetadata(mpLayerId, true, 1000);
+
+        CatalogBuilder builder = new CatalogBuilder(getCatalog());
+        
+        // build the nested layer group, only one layer in it
+        LayerGroupInfo nested = getCatalog().getFactory().createLayerGroup();
+        nested.setName(NESTED_LAYER_GROUP);
+        nested.getLayers().add(getCatalog().getLayerByName(bpLayerId));
+        builder.calculateLayerGroupBounds(nested);
+        getCatalog().add(nested);
+        
+        // build the container layer group
+        LayerGroupInfo container = getCatalog().getFactory().createLayerGroup();
+        container.setName(CONTAINER_LAYER_GROUP);
+        container.getLayers().add(getCatalog().getLayerByName(mpLayerId));
+        container.getLayers().add(getCatalog().getLayerGroupByName(NESTED_LAYER_GROUP));
+        builder.calculateLayerGroupBounds(container);
+        getCatalog().add(container);
+        
+        
+        // check the caching headers on the nested group
+        MockHttpServletResponse sr = getAsServletResponse("gwc/service/wmts?request=GetTile&layer="
+                + NESTED_LAYER_GROUP
+                + "&format=image/png&tilematrixset=EPSG:4326&tilematrix=EPSG:4326:0&tilerow=0&tilecol=0");
+        assertEquals(200, sr.getErrorCode());
+        assertEquals("image/png", sr.getContentType());
+        assertEquals("max-age=7200, must-revalidate", sr.getHeader("Cache-Control"));
+        
+        // check the caching headers on the container layer group
+        sr = getAsServletResponse("gwc/service/wmts?request=GetTile&layer="
+                + CONTAINER_LAYER_GROUP
+                + "&format=image/png&tilematrixset=EPSG:4326&tilematrix=EPSG:4326:0&tilerow=0&tilecol=0");
+        assertEquals(200, sr.getErrorCode());
+        assertEquals("image/png", sr.getContentType());
+        assertEquals("max-age=1000, must-revalidate", sr.getHeader("Cache-Control"));
+    }
+
+    private void setCachingMetadata(String layerId, boolean cachingEnabled, int cacheAgeMax) {
+        FeatureTypeInfo ft = getCatalog().getResourceByName(layerId, FeatureTypeInfo.class);
+        ft.getMetadata().put(ResourceInfo.CACHING_ENABLED, cachingEnabled);
+        ft.getMetadata().put(ResourceInfo.CACHE_AGE_MAX, cacheAgeMax);
+        getCatalog().save(ft);
+    }
+
 
     /**
      * If direct WMS integration is enabled, a GetMap requests that hits the regular WMS but matches
@@ -170,21 +299,21 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
         final String path = buildGetMap(true, layerName, "EPSG:4326", null) + "&tiled=true";
         final String qualifiedName = super.getLayerId(BASIC_POLYGONS);
         final GeoServerTileLayer tileLayer = (GeoServerTileLayer) gwc.getTileLayerByName(qualifiedName);
-        tileLayer.getLayerInfo().getResource().getMetadata().put("cachingEnabled", "true");
-        tileLayer.getLayerInfo().getResource().getMetadata().put("cacheAgeMax", 3456);
+        tileLayer.getLayerInfo().getResource().getMetadata().put(ResourceInfo.CACHING_ENABLED, "true");
+        tileLayer.getLayerInfo().getResource().getMetadata().put(ResourceInfo.CACHE_AGE_MAX, 3456);
 
         MockHttpServletResponse response = getAsServletResponse(path);
         String cacheControl = response.getHeader("Cache-Control");
         assertEquals("max-age=3456", cacheControl);
         assertNotNull(response.getHeader("Last-Modified"));
 
-        tileLayer.getLayerInfo().getResource().getMetadata().put("cachingEnabled", "false");
+        tileLayer.getLayerInfo().getResource().getMetadata().put(ResourceInfo.CACHING_ENABLED, "false");
         response = getAsServletResponse(path);
         cacheControl = response.getHeader("Cache-Control");
         assertEquals("no-cache", cacheControl);
 
         // make sure a boolean is handled, too - see comment in CachingWebMapService
-        tileLayer.getLayerInfo().getResource().getMetadata().put("cachingEnabled", Boolean.FALSE);
+        tileLayer.getLayerInfo().getResource().getMetadata().put(ResourceInfo.CACHING_ENABLED, Boolean.FALSE);
         response = getAsServletResponse(path);
         cacheControl = response.getHeader("Cache-Control");
         assertEquals("no-cache", cacheControl);
@@ -467,5 +596,32 @@ public class GWCIntegrationTest extends GeoServerSystemTestSupport {
         System.out.println(response.getOutputStreamContent());
         assertEquals("application/vnd.ogc.wms_xml", response.getContentType());
         assertEquals("inline;filename=wms-getcapabilities.xml", response.getHeader("content-disposition"));
+    }
+    
+    @Test
+    public void testGutter() throws Exception {
+        GeoServerTileLayer tileLayer = (GeoServerTileLayer) GWC.get().getTileLayerByName(getLayerId(BASIC_POLYGONS));
+        GeoServerTileLayerInfo info = tileLayer.getInfo();
+        info.setGutter(100);
+        GWC.get().save(tileLayer);
+                
+        String request = "gwc/service/wms?LAYERS=cite%3ABasicPolygons&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326&BBOX=0,0,11.25,11.25&WIDTH=256&HEIGHT=256";
+        BufferedImage image = getAsImage(request, "image/png");
+        // with GEOS-5786 active we would have gotten back a 356px image
+        assertEquals(256, image.getWidth());
+        assertEquals(256, image.getHeight());
+    }
+    
+    @Test
+    public void testSaveConfig() throws Exception {
+        GWCConfig config = GWC.get().getConfig();
+        // set a large gutter
+        config.setGutter(100);
+        // save the config
+        GWC.get().saveConfig(config);
+        // force a reload
+        getGeoServer().reload();
+        // grab the config, make sure it was saved as expected
+        assertEquals(100, GWC.get().getConfig().getGutter());
     }
 }

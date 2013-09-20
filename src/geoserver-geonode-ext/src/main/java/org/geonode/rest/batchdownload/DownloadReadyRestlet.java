@@ -88,7 +88,6 @@ public class DownloadReadyRestlet extends Restlet {
             File file = zipRes.getFile();
             long fileSize = file.length();
             representation.setSize(fileSize);
-            representation.setTag(new Tag()) 
         } catch (Exception e) {
             // no worries, may the resource be not referencing a file in the filesystem but some
             // other kind of resource
