@@ -76,12 +76,17 @@ public class WFSConfiguration extends Configuration {
      */
     protected FeatureTypeSchemaBuilder schemaBuilder;
 
+
+    protected boolean dynamicFeatureTypeSchema;
+
+
     public WFSConfiguration(GeoServer geoServer, FeatureTypeSchemaBuilder schemaBuilder, final WFS wfs) {
         super( wfs );
 
         this.catalog = geoServer.getCatalog();
         this.schemaBuilder = schemaBuilder;
-        
+        this.dynamicFeatureTypeSchema = schemaBuilder.getDynamicFeatureTypeSchema();
+
         catalog.addListener(new CatalogListener() {
 
             public void handleAddEvent(CatalogAddEvent event) {
@@ -240,6 +245,11 @@ public class WFSConfiguration extends Configuration {
         context.registerComponentImplementation(PropertyTypePropertyExtractor.class);
         context.registerComponentInstance(getSrsSyntax());
 
+        /*
+         * Normally this is done for all featuretypes when a WFS call is first made.
+         * This can be a problem with thousands of featuretypes.
+         */
+        if (!this.dynamicFeatureTypeSchema) {
         //seed the cache with entries from the catalog
         FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
             .getComponentInstanceOfType(FeatureTypeCache.class);
@@ -262,6 +272,13 @@ public class WFSConfiguration extends Configuration {
             }
 
             featureTypeCache.put(featureType);
+        	}
+        } else {
+        	/*
+        	 * Set context to schemaBuilder so FeatureTypeCache can be called
+        	 * from there, and then add featureType to it there.
+        	 */
+        	schemaBuilder.setContext(context);
         }
     }
 

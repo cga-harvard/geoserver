@@ -109,6 +109,7 @@ public class LegacyConfigurationImporter {
         //info.setMaxFeatures( get( global, "maxFeatures", Integer.class ) );
         info.setVerbose( get( global, "verbose", boolean.class ) );
         info.setVerboseExceptions( get( global, "verboseExceptions", boolean.class ) );
+        info.setDynamicFeatureTypeSchema(get( global, "dynamicFeatureTypeSchema", boolean.class ));
         info.setNumDecimals( get( global, "numDecimals", int.class, 4 ) );
         info.setCharset( (String) global.get( "charSet" ) );
         info.setUpdateSequence( get( global, "updateSequence", int.class ) );

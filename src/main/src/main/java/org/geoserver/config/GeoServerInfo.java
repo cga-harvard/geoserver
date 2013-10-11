@@ -259,12 +259,28 @@ public interface GeoServerInfo extends Info {
      * Sets the size of the cache for feature type objects.
      */
     void setFeatureTypeCacheSize(int featureTypeCacheSize);
-   
+
     /**
-     * Flag determining if access to services should occur only through "virtual services". 
+     * Flag determining if WFS should load a featuretype into schema
+     * as requested/needed, instead of preloading all featuretypes
+     * @uml.property name="dynamicFeatureTypeSchema"
+     * @deprecated use {@link #getSettings()}
+     */
+    boolean isDynamicFeatureTypeSchema();
+
+    /**
+     * Sets the flag determining if featuretype schemas should be loaded individually
+     * as needed.
+     */
+    void setDynamicFeatureTypeSchema(boolean dynamicFeatureTypeSchema);
+
+    /**
+     * Flag determining if access to services should occur only through "virtual services".
      */
     Boolean isGlobalServices();
-    
+
+
+
     /**
      * Sets the flag forcing access to services only through virtual services. 
      */
