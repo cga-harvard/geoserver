@@ -11,7 +11,7 @@
   <parent>
     <groupId>org.geoserver</groupId> 
     <artifactId>web</artifactId>
-    <version>2.3-SNAPSHOT</version>
+    <version>2.4-SNAPSHOT</version>
   </parent>
 
   <!--repositories>
@@ -102,14 +102,14 @@
     <dependency>
         <groupId>org.opengeo.geoserver</groupId>
         <artifactId>importer</artifactId>
-        <version>2.3-SNAPSHOT</version>
+        <version>2.4-SNAPSHOT</version>
         <scope>runtime</scope>
     </dependency>
 
     <dependency>
         <groupId>org.opengeo.data.csv</groupId>
         <artifactId>csv</artifactId>
-        <version>2.3-SNAPSHOT</version>
+        <version>2.4-SNAPSHOT</version>
         <scope>runtime</scope>
     </dependency>
 
@@ -122,7 +122,7 @@
     <dependency>
         <groupId>org.opengeo.geoserver</groupId>
         <artifactId>printng</artifactId>
-        <version>2.3-SNAPSHOT</version>
+        <version>2.4-SNAPSHOT</version>
         <scope>runtime</scope>
     </dependency>
 
@@ -231,8 +231,8 @@
     </dependency>
   </dependencies>
   <properties>
-    <geotools.version>9.2</geotools.version>
-    <geoserver.version>2.3-SNAPSHOT</geoserver.version>
+    <geotools.version>10-SNAPSHOT</geotools.version>
+    <geoserver.version>2.4-SNAPSHOT</geoserver.version>
     <jetty.version>6.1.8</jetty.version>
     <maven.test.search.classdir>true</maven.test.search.classdir>
   </properties>

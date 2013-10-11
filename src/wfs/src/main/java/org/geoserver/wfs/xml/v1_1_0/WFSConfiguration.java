@@ -250,29 +250,29 @@ public class WFSConfiguration extends Configuration {
          * This can be a problem with thousands of featuretypes.
          */
         if (!this.dynamicFeatureTypeSchema) {
-        //seed the cache with entries from the catalog
-        FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
-            .getComponentInstanceOfType(FeatureTypeCache.class);
+            //seed the cache with entries from the catalog
+            FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
+                    .getComponentInstanceOfType(FeatureTypeCache.class);
 
-        Collection featureTypes = catalog.getFeatureTypes();
-        for (Iterator f = featureTypes.iterator(); f.hasNext();) {
-            FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
-            if ( !meta.enabled() ) {
-                continue;
+            Collection featureTypes = catalog.getFeatureTypes();
+            for (Iterator f = featureTypes.iterator(); f.hasNext();) {
+                FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
+                if ( !meta.enabled() ) {
+                    continue;
+                }
+
+
+                FeatureType featureType =  null;
+                try {
+                    featureType = meta.getFeatureType();
+                } catch(Exception e) {
+                    LOGGER.log(Level.WARNING, "Could not load underlying feature type for type "
+                            + meta.getName(), e);
+                    continue;
+                }
+
+                featureTypeCache.put(featureType);
             }
-
-            
-            FeatureType featureType =  null;
-            try {
-                featureType = meta.getFeatureType();
-            } catch(Exception e) {
-                LOGGER.log(Level.WARNING, "Could not load underlying feature type for type " 
-                        + meta.getName(), e);
-                continue;
-            }
-
-            featureTypeCache.put(featureType);
-        	}
         } else {
         	/*
         	 * Set context to schemaBuilder so FeatureTypeCache can be called

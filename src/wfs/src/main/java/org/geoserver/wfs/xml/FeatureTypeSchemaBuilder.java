@@ -519,26 +519,26 @@ public abstract class FeatureTypeSchemaBuilder {
              * featuretype schema will be retrieved as needed inside buildSchemaInternal() instead.
              */
             if (!this.dynamicFeatureTypeSchema) {
-				//build the schema for the types in the single namespace (and don't clean them, they are not dynamic)
-				XSDSchema schema = buildSchemaInternal(
-						new FeatureTypeInfo[] { meta }, null, false);
-            //add the types + elements to the wfs schema
-            for (Iterator<XSDTypeDefinition> t = schema.getTypeDefinitions().iterator(); t.hasNext();) {
-                wfsSchema.getTypeDefinitions().add(t.next());
-            }
+                //build the schema for the types in the single namespace (and don't clean them, they are not dynamic)
+                XSDSchema schema = buildSchemaInternal(
+                        new FeatureTypeInfo[] { meta }, null, false);
+                //add the types + elements to the wfs schema
+                for (Iterator<XSDTypeDefinition> t = schema.getTypeDefinitions().iterator(); t.hasNext();) {
+                    wfsSchema.getTypeDefinitions().add(t.next());
+                }
 
-            for (Iterator<XSDElementDeclaration> e = schema.getElementDeclarations().iterator(); e.hasNext();) {
-                wfsSchema.getElementDeclarations().add(e.next());
-            }
-            
-            // add secondary namespaces from catalog
-            for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) schema.getQNamePrefixToNamespaceMap()
-                    .entrySet()) {
-                if (!wfsSchema.getQNamePrefixToNamespaceMap().containsKey(entry.getKey())) {
-                    wfsSchema.getQNamePrefixToNamespaceMap().put(entry.getKey(), entry.getValue());
+                for (Iterator<XSDElementDeclaration> e = schema.getElementDeclarations().iterator(); e.hasNext();) {
+                    wfsSchema.getElementDeclarations().add(e.next());
+                }
+
+                // add secondary namespaces from catalog
+                for (Map.Entry<String, String> entry : (Set<Map.Entry<String, String>>) schema.getQNamePrefixToNamespaceMap()
+                        .entrySet()) {
+                    if (!wfsSchema.getQNamePrefixToNamespaceMap().containsKey(entry.getKey())) {
+                        wfsSchema.getQNamePrefixToNamespaceMap().put(entry.getKey(), entry.getValue());
+                    }
                 }
             }
-        }
         }
 
         return wfsSchema;

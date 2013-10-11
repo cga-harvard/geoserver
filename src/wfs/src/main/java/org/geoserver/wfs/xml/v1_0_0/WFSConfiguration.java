@@ -62,11 +62,14 @@ public class WFSConfiguration extends Configuration {
     Catalog catalog;
     FeatureTypeSchemaBuilder schemaBuilder;
 
+    protected boolean dynamicFeatureTypeSchema;
+
     public WFSConfiguration(Catalog catalog, FeatureTypeSchemaBuilder schemaBuilder, final WFS wfs) {
         super( wfs );
 
         this.catalog = catalog;
         this.schemaBuilder = schemaBuilder;
+        this.dynamicFeatureTypeSchema = schemaBuilder.getDynamicFeatureTypeSchema();
 
         catalog.addListener(new CatalogListener() {
 
@@ -164,30 +167,38 @@ public class WFSConfiguration extends Configuration {
         context.registerComponentInstance(new WFSHandlerFactory(catalog, schemaBuilder));
         context.registerComponentInstance(catalog);
         context.registerComponentImplementation(PropertyTypePropertyExtractor.class);
-        
-        //TODO: this code is copied from the 1.1 configuration, FACTOR IT OUT!!!
-        //seed the cache with entries from the catalog
-        FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
-            .getComponentInstanceOfType(FeatureTypeCache.class);
 
-        Collection featureTypes = catalog.getFeatureTypes();
-        for (Iterator f = featureTypes.iterator(); f.hasNext();) {
-            FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
-            if ( !meta.enabled() ) {
-                continue;
+        if (!this.dynamicFeatureTypeSchema) {
+            //TODO: this code is copied from the 1.1 configuration, FACTOR IT OUT!!!
+            //seed the cache with entries from the catalog
+            FeatureTypeCache featureTypeCache = (FeatureTypeCache) context
+                    .getComponentInstanceOfType(FeatureTypeCache.class);
+
+            Collection featureTypes = catalog.getFeatureTypes();
+            for (Iterator f = featureTypes.iterator(); f.hasNext();) {
+                FeatureTypeInfo meta = (FeatureTypeInfo) f.next();
+                if ( !meta.enabled() ) {
+                    continue;
+                }
+
+
+                FeatureType featureType =  null;
+                try {
+                    featureType = meta.getFeatureType();
+                } catch(Exception e) {
+                    LOGGER.log(Level.WARNING, "Could not load underlying feature type for type "
+                            + meta.getName(), e);
+                    continue;
+                }
+
+                featureTypeCache.put(featureType);
             }
-
-            
-            FeatureType featureType =  null;
-            try {
-                featureType = meta.getFeatureType();
-            } catch(Exception e) {
-                LOGGER.log(Level.WARNING, "Could not load underlying feature type for type " 
-                        + meta.getName(), e);
-                continue;
-            }
-
-            featureTypeCache.put(featureType);
+        } else {
+        	/*
+        	 * Set context to schemaBuilder so FeatureTypeCache can be called
+        	 * from there, and then add featureType to it there.
+        	 */
+            schemaBuilder.setContext(context);
         }
     }
 
