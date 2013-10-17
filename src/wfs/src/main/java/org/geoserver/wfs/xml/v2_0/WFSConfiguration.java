@@ -7,7 +7,7 @@ package org.geoserver.wfs.xml.v2_0;
 import java.util.Map;
 import org.geotools.wfs.v2_0.WFS;
 
-/**                    icon-fl
+/**
  * Extend GeoTools WFSConfiguration to provide a custom binding class for GetFeatureType
  */
 public class WFSConfiguration extends org.geotools.wfs.v2_0.WFSConfiguration {

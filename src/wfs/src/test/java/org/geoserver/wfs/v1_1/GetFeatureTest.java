@@ -458,19 +458,21 @@ public class GetFeatureTest extends WFSTestSupport {
         XMLAssert.assertXpathExists("//gml:description", dom);
         XMLAssert.assertXpathNotExists("//sf:name", dom);
         XMLAssert.assertXpathNotExists("//sf:description", dom);
-        
-        gml.setOverrideGMLAttributes(true);
-        getGeoServer().save(wfs);
-    
-        dom = getAsDOM("ows?service=WFS&version=1.1.0&request=GetFeature" +
-                "&typename=" + getLayerId(SystemTestData.PRIMITIVEGEOFEATURE));
-        XMLAssert.assertXpathNotExists("//gml:name", dom);
-        XMLAssert.assertXpathNotExists("//gml:description", dom);
-        XMLAssert.assertXpathExists("//sf:name", dom);
-        XMLAssert.assertXpathExists("//sf:description", dom);
-        
-        gml.setOverrideGMLAttributes(false);
-        getGeoServer().save(wfs);
+
+        if (!getGeoServer().getSettings().isDynamicFeatureTypeSchema()) {
+            gml.setOverrideGMLAttributes(true);
+            getGeoServer().save(wfs);
+
+            dom = getAsDOM("ows?service=WFS&version=1.1.0&request=GetFeature" +
+                    "&typename=" + getLayerId(SystemTestData.PRIMITIVEGEOFEATURE));
+            XMLAssert.assertXpathNotExists("//gml:name", dom);
+            XMLAssert.assertXpathNotExists("//gml:description", dom);
+            XMLAssert.assertXpathExists("//sf:name", dom);
+            XMLAssert.assertXpathExists("//sf:description", dom);
+
+            gml.setOverrideGMLAttributes(false);
+            getGeoServer().save(wfs);
+        }
     }
     
     @Test

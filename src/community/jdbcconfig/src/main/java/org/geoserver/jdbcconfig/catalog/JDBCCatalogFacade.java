@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -38,6 +39,7 @@ import org.geoserver.catalog.util.CloseableIterator;
 import org.geoserver.jdbcconfig.internal.ConfigDatabase;
 import org.geoserver.ows.util.OwsUtils;
 import org.geotools.util.Utilities;
+import org.geotools.util.logging.Logging;
 import org.opengis.filter.Filter;
 import org.opengis.filter.sort.SortBy;
 import org.springframework.util.Assert;
@@ -52,6 +54,8 @@ import com.google.common.base.Preconditions;
 public class JDBCCatalogFacade implements CatalogFacade {
 
     private final ConfigDatabase db;
+
+    static final Logger LOGGER = Logging.getLogger(JDBCCatalogFacade.class.getPackage().getName());
 
     public JDBCCatalogFacade(final ConfigDatabase db) {
         this.db = db;
@@ -1021,7 +1025,7 @@ public class JDBCCatalogFacade implements CatalogFacade {
         Class<T> clazz = ClassMappings.fromImpl(info.getClass()).getInterface();
 
         setId(info, clazz);
-
+        LOGGER.info("INFO IS " + info.toString());
         T added = db.add(info);
 
         return added;
@@ -1047,6 +1051,7 @@ public class JDBCCatalogFacade implements CatalogFacade {
             id = type.getSimpleName() + "." + newId;
         }
 
+        LOGGER.info("ID set to " + id);
         OwsUtils.set(info, "id", id);
     }
 

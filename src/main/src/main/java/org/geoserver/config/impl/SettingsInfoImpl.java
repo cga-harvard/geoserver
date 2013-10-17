@@ -36,7 +36,7 @@ public class SettingsInfoImpl implements SettingsInfo {
 
     protected boolean verboseExceptions = false;
 
-    protected boolean dynamicFeatureTypeSchema = false;
+    protected boolean dynamicFeatureTypeSchema = true;
 
     protected MetadataMap metadata = new MetadataMap();
 
