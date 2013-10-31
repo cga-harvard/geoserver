@@ -446,7 +446,14 @@ public class ClassifierResource extends AbstractCatalogResource {
 							}
 							writer.endNode();
 						}
-					} else {
+                    }
+                    else if (((String)key).startsWith("@")){
+                        writer.addAttribute(((String) key).substring(1), (String)obj);
+                    }
+                    else if (((String)key).startsWith("#text")){
+                        writer.setValue((String) obj);
+                    }
+                    else {
 						writer.startNode((String) key);
 						writeChild(writer, obj);
 						writer.endNode();
