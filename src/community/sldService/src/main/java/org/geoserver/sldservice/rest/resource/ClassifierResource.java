@@ -48,10 +48,7 @@ import org.geoserver.rest.format.ReflectiveJSONFormat;
 import org.geoserver.rest.format.ReflectiveXMLFormat;
 import org.geoserver.sldservice.utils.classifier.ColorRamp;
 import org.geoserver.sldservice.utils.classifier.RulesBuilder;
-import org.geoserver.sldservice.utils.classifier.impl.BlueColorRamp;
-import org.geoserver.sldservice.utils.classifier.impl.CustomColorRamp;
-import org.geoserver.sldservice.utils.classifier.impl.RandomColorRamp;
-import org.geoserver.sldservice.utils.classifier.impl.RedColorRamp;
+import org.geoserver.sldservice.utils.classifier.impl.*;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.styling.Rule;
 import org.geotools.styling.SLDTransformer;
@@ -288,6 +285,7 @@ public class ClassifierResource extends AbstractCatalogResource {
 								rules = builder.quantileClassification(ftCollection, property, Integer.parseInt(intervals), Boolean.parseBoolean(open));
 							}
 
+
 							if (colorRamp != null && colorRamp.length() > 0) {
 								ColorRamp ramp = null;
 								if (colorRamp.equalsIgnoreCase("random"))
@@ -296,6 +294,10 @@ public class ClassifierResource extends AbstractCatalogResource {
 									ramp = (ColorRamp) new RedColorRamp();
 								else if (colorRamp.equalsIgnoreCase("blue"))
 									ramp = (ColorRamp) new BlueColorRamp();
+                                else if (colorRamp.equalsIgnoreCase("jet"))
+                                    ramp = (ColorRamp) new JetColorRamp();
+                                else if (colorRamp.equalsIgnoreCase("gray"))
+                                    ramp = (ColorRamp) new GrayColorRamp();
 								else if (colorRamp.equalsIgnoreCase("custom")) {
 									Color startColor = Color.decode(form.getFirst("startColor").getValue());
 									Color endColor = Color.decode(form.getFirst("endColor").getValue());
