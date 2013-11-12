@@ -23,10 +23,7 @@ import java.awt.Color;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -264,6 +261,7 @@ public class ClassifierResource extends AbstractCatalogResource {
 			final String intervals = form.getFirstValue("intervals", "2");
 			final String open = form.getFirstValue("open", "false");
 			final String colorRamp = form.getFirstValue("ramp");
+            final boolean reverse = Boolean.parseBoolean(form.getFirstValue("reverse"));
 
 			if (property != null && property.length() > 0) {
 				/* First try to find as a FeatureType */
@@ -317,7 +315,7 @@ public class ClassifierResource extends AbstractCatalogResource {
 								 * Line Symbolizer
 								 */
 								if (geomT == LineString.class || geomT == MultiLineString.class) {
-									builder.lineStyle(rules, ramp);
+									builder.lineStyle(rules, ramp, reverse);
 								}
 
 								/*
@@ -327,7 +325,7 @@ public class ClassifierResource extends AbstractCatalogResource {
 										|| geomT == Polygon.class
 										|| geomT == Point.class
 										|| geomT == MultiPoint.class) {
-									builder.polygonStyle(rules, ramp);
+									builder.polygonStyle(rules, ramp, reverse);
 								}
 							}
 

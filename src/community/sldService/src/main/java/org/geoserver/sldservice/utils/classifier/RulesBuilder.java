@@ -165,9 +165,10 @@ public class RulesBuilder {
 	 * Generate Polygon Symbolyzer for each rule in list
 	 * Fill color is choose from rampcolor
 	 * @param rules
-	 * @param ramp
+     * @param fillRamp
+     * @param reverseColors
 	 */
-	public void polygonStyle(List<Rule> rules, ColorRamp fillRamp) {
+	public void polygonStyle(List<Rule> rules, ColorRamp fillRamp, boolean reverseColors) {
 
 		Iterator<Rule> it;
 		Rule rule;
@@ -177,6 +178,9 @@ public class RulesBuilder {
 		try {
 			//adjust the colorRamp with the correct number of classes
 			fillRamp.setNumClasses(rules.size());
+            if (reverseColors) {
+                fillRamp.revert();
+            }
 			colors = fillRamp.getRamp().iterator();
 			
 			it = rules.iterator();
@@ -197,9 +201,10 @@ public class RulesBuilder {
 	 * Generate Line Symbolyzer for each rule in list
 	 * Stroke color is choose from rampcolor
 	 * @param rules
-	 * @param ramp
+	 * @param fillRamp
+     * @param reverseColors
 	 */
-	public void lineStyle(List<Rule> rules, ColorRamp fillRamp) {
+	public void lineStyle(List<Rule> rules, ColorRamp fillRamp, boolean reverseColors) {
 
 		Iterator<Rule> it;
 		Rule rule;
@@ -209,6 +214,9 @@ public class RulesBuilder {
 		try {
 			//adjust the colorRamp with the correct number of classes
 			fillRamp.setNumClasses(rules.size());
+            if (reverseColors) {
+                fillRamp.revert();
+            }
 			colors = fillRamp.getRamp().iterator();
 
 			it = rules.iterator();
