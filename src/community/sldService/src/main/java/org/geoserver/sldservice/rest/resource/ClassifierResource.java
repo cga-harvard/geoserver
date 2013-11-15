@@ -281,7 +281,9 @@ public class ClassifierResource extends AbstractCatalogResource {
 								rules = builder.uniqueIntervalClassification(ftCollection, property);
 							} else if ("quantile".equals(method)) {
 								rules = builder.quantileClassification(ftCollection, property, Integer.parseInt(intervals), Boolean.parseBoolean(open));
-							}
+							} else if ("jenks".equals(method)) {
+                                rules = builder.jenksClassification(ftCollection, property, Integer.parseInt(intervals), Boolean.parseBoolean(open));
+                            }
 
 							if (colorRamp != null && colorRamp.length() > 0) {
 								ColorRamp ramp = null;

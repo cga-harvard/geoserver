@@ -161,6 +161,38 @@ public class RulesBuilder {
 		return null;
 	}
 
+    /**
+     * Generate a List of rules using Jenks Natural Breaks classification Sets up only
+     * filter not symbolizer
+     *
+     * @param features
+     * @param property
+     * @param classNumber
+     * @return
+     */
+    public List<Rule> jenksClassification(FeatureCollection features, String property, int classNumber, boolean open) {
+        Classifier groups = null;
+        try {
+            final Function classify = ff.function("Jenks", ff.property(property), ff.literal(classNumber));
+            groups = (Classifier) classify.evaluate(features);
+            //System.out.println(groups.getSize());
+            if (groups instanceof RangedClassifier)
+                if(open)
+                    return openRangedRules((RangedClassifier) groups, property);
+                else
+                    return closedRangedRules((RangedClassifier) groups, property);
+            else if (groups instanceof ExplicitClassifier)
+                return this.explicitRules((ExplicitClassifier) groups, property);
+
+        } catch (Exception e) {
+            if (LOGGER.isLoggable(Level.INFO))
+                LOGGER.log(Level.INFO, "Failed to build Jenks Classification"
+                        + e.getLocalizedMessage(), e);
+        }
+        return null;
+    }
+
+
 	/**
 	 * Generate Polygon Symbolyzer for each rule in list
 	 * Fill color is choose from rampcolor
