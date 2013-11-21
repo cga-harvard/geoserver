@@ -285,7 +285,6 @@ public class ClassifierResource extends AbstractCatalogResource {
 								rules = builder.quantileClassification(ftCollection, property, Integer.parseInt(intervals), Boolean.parseBoolean(open));
 							}
 
-
 							if (colorRamp != null && colorRamp.length() > 0) {
 								ColorRamp ramp = null;
 								if (colorRamp.equalsIgnoreCase("random"))
