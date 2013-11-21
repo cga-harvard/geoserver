@@ -28,5 +28,5 @@
     <tileThreads>7</tileThreads>
   </jai>
   <verboseExceptions>false</verboseExceptions>
-  <dynamicFeatureTypeSchema>true</dynamicFeatureTypeSchema>
+  <dynamicFeatureTypeSchema>false</dynamicFeatureTypeSchema>
 </global>
