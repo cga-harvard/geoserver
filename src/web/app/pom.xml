@@ -482,7 +482,12 @@
       <dependencies>
         <dependency>
           <groupId>org.geoserver</groupId>
-          <artifactId>dxf</artifactId>
+          <artifactId>dxf-core</artifactId>
+          <version>${project.version}</version> 
+        </dependency>
+        <dependency>
+          <groupId>org.geoserver</groupId>
+          <artifactId>dxf-wps</artifactId>
           <version>${project.version}</version> 
         </dependency>
       </dependencies>
@@ -747,7 +752,7 @@
           <version>${project.version}</version>
         </dependency>
         <dependency>
-          <groupId>org.geoserver.web</groupId>
+          <groupId>org.geoserver.security</groupId>
           <artifactId>web-sec-cas</artifactId>
           <version>${project.version}</version>
         </dependency>
