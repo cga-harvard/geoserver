@@ -1,7 +1,5 @@
 package org.geonode.security;
 
-import java.util.List;
-import java.util.ArrayList;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.io.IOException;
@@ -12,6 +10,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,14 +20,15 @@ import net.sf.json.JSONSerializer;
 import org.apache.commons.codec.binary.Base64;
 import org.geoserver.catalog.ResourceInfo;
 import org.geoserver.security.AccessMode;
-import org.geotools.util.logging.Logging;
 import org.geoserver.security.impl.GeoServerRole;
+import org.geoserver.security.impl.GeoServerUser;
+import org.geotools.util.logging.Logging;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
 /**
@@ -61,9 +61,9 @@ public class DatabaseSecurityClient implements GeoNodeSecurityClient {
      */
     private final Cache<AuthorizationKey, Byte> authorizationCache;
     private final AnonymousAuthenticationToken ANONYMOUS = new AnonymousAuthenticationToken(
-            "geonode", "anonymous", Collections.singletonList(new SimpleGrantedAuthority("ROLE_ANONYMOUS")));
+            "geonode", "anonymous", Collections.singletonList(GeoServerRole.ANONYMOUS_ROLE));
     private final Collection<? extends GrantedAuthority> ADMIN_AUTHORITY = 
-            Collections.singleton(GeoNodeDataAccessManager.getAdminRole());
+            Arrays.asList(GeoServerRole.ADMIN_ROLE, GeoServerRole.AUTHENTICATED_ROLE);
 
     public DatabaseSecurityClient(DataSource dataSource, String baseUrl, HTTPClient httpClient) {
         this.dataSource = dataSource;
@@ -114,7 +114,7 @@ public class DatabaseSecurityClient implements GeoNodeSecurityClient {
 
     private Authentication authenticate(final Object credentials, final String... requestHeaders)
             throws AuthenticationException, IOException {
-        final String url = baseUrl + "data/resolve_user";
+        final String url = baseUrl + "layers/resolve_user";
 
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("Authenticating with " + Arrays.toString(requestHeaders));
@@ -130,36 +130,31 @@ public class DatabaseSecurityClient implements GeoNodeSecurityClient {
     }
 
     private Authentication toAuthentication(Object credentials, JSONObject json) {
-        //Collection<? extends GrantedAuthority> authorities = null;
-        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
+        Collection<? extends GrantedAuthority> authorities = null;
         Authentication auth;
         Object userName = json.get("user");
-         LOGGER.log(Level.FINE, "JSON is " +  json.toString());
-         LOGGER.log(Level.FINE, "username is " + userName);
         // if userName is null, this will return a JSONObject
         if (userName instanceof JSONObject) {
             // either anonymous or geoserver at this point
             if (json.getBoolean("geoserver")) {
-                LOGGER.log(Level.FINE, "Attempt to authenticate as geoserver ");
-                authorities.add(GeoServerRole.ADMIN_ROLE);
-                authorities.add(GeoNodeDataAccessManager.getAdminRole());
-                auth = new PreAuthenticatedAuthenticationToken("admin", "admin",
-                        authorities
+                auth = new PreAuthenticatedAuthenticationToken("geoserver", "geoserver",
+                        ADMIN_AUTHORITY
                 );
             } else {
-                LOGGER.log(Level.FINE, "Attempt to authenticate as anonymous ");
                 auth = ANONYMOUS;
             }
         } else {
             if (json.getBoolean("superuser")) {
-               LOGGER.log(Level.FINE, "Set authorities to ADMIN");
-                authorities.add(GeoServerRole.ADMIN_ROLE);
-                authorities.add(GeoNodeDataAccessManager.getAdminRole());
+                authorities = ADMIN_AUTHORITY;
             } else {
-                LOGGER.log(Level.FINE, "Set authorities to empty");
                 authorities = Collections.EMPTY_LIST;
             }
-            auth = new UsernamePasswordAuthenticationToken(userName, credentials, authorities);
+            GeoServerUser details = new GeoServerUser(userName.toString());
+            Properties props = details.getProperties();
+            props.put("email", json.optString("email"));
+            props.put("fullname", json.optString("fullname"));
+
+            auth = new UsernamePasswordAuthenticationToken(details, credentials, authorities);
         }
         return auth;
     }
@@ -208,31 +203,25 @@ public class DatabaseSecurityClient implements GeoNodeSecurityClient {
                 LOGGER.log(Level.WARNING, "Error closing statement", ex);
             }
         }
-        LOGGER.log(Level.FINE, "AUTH RESULT IS" + auth);
         return auth;
     }
 
     public boolean authorize(Authentication user, ResourceInfo resource, AccessMode mode) {
-    	LOGGER.log(Level.FINE, "GETTING AUTH FROM AUTHKEY?");
         String resourceName = resource.prefixedName();
         AuthorizationKey key = new AuthorizationKey(user.getName(), resourceName);
         Byte bits = authorizationCache.getIfPresent(key);
         if (bits == null) {
-        	LOGGER.log(Level.SEVERE, "bits is null");
             bits = computeBits(user, resource, mode);
             authorizationCache.put(key, bits);
         }
         boolean authorized = false;
         switch (bits) {
             case ACCESS_DENIED: case ACCESS_UNKNOWN:
-            	LOGGER.log(Level.FINE, "ACCESS DENIED/UNKNOWN");
                 break;
             case ACCESS_READ: 
                 authorized = mode == AccessMode.READ;
-                LOGGER.log(Level.FINE, "ACCESS READ");
                 break;
             case ACCESS_WRITE:
-            	LOGGER.log(Level.FINE, "ACCESS WRITE");
                 authorized = true;
                 break;
             default:
@@ -260,7 +249,6 @@ public class DatabaseSecurityClient implements GeoNodeSecurityClient {
         // nf - no rule found (no auth)
         final String auth = authorize(userName, resource.prefixedName());
         final boolean debug = LOGGER.isLoggable(Level.FINE);
-        LOGGER.log(Level.FINE, "Authorizing {0} : {1}", new Object[] {userName, resource.prefixedName()});
         byte bits = ACCESS_DENIED;
         // if auth is null, errors already logged, consider tossing an exception?
         if (auth != null) {
@@ -272,7 +260,7 @@ public class DatabaseSecurityClient implements GeoNodeSecurityClient {
                         LOGGER.log(Level.FINE, "rejecting {0} : {1}", new Object[] {user.getName(), auth});
                     }
                 } else {
-                    LOGGER.log(Level.FINE, "unknown access {0} : {1}", new Object[] {user.getName(), auth});
+                    LOGGER.log(Level.WARNING, "unknown access {0} : {1}", new Object[] {user.getName(), auth});
                     bits = ACCESS_UNKNOWN;
                 }
             } else {

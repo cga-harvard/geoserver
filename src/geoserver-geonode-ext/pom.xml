@@ -1,18 +1,16 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.opengeo</groupId>
   <artifactId>geonode-geoserver-ext</artifactId>
   <packaging>jar</packaging>
-  <version>0.3</version>
+  <version>${geoserver.version}</version>
   <name>GeoNode GeoServer Extensions</name>
 
-  <parent>
-    <groupId>org.geoserver</groupId> 
-    <artifactId>web</artifactId>
-    <version>2.4-SNAPSHOT</version>
-  </parent>
+    <parent>
+        <groupId>org.geoserver</groupId>
+        <artifactId>web</artifactId>
+        <version>2.4-SNAPSHOT</version>
+    </parent>
 
   <!--repositories>
     <repository>
@@ -102,15 +100,22 @@
     <dependency>
         <groupId>org.opengeo.geoserver</groupId>
         <artifactId>importer</artifactId>
-        <version>2.4-SNAPSHOT</version>
+        <version>${geoserver.version}</version>
         <scope>runtime</scope>
     </dependency>
 
     <dependency>
         <groupId>org.opengeo.data.csv</groupId>
         <artifactId>csv</artifactId>
-        <version>2.4-SNAPSHOT</version>
+        <version>${geoserver.version}</version>
         <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.geoserver.extension</groupId>
+      <artifactId>wps-core</artifactId>
+      <version>${geoserver.version}</version>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>
@@ -122,7 +127,7 @@
     <dependency>
         <groupId>org.opengeo.geoserver</groupId>
         <artifactId>printng</artifactId>
-        <version>2.4-SNAPSHOT</version>
+        <version>${geoserver.version}</version>
         <scope>runtime</scope>
     </dependency>
 
