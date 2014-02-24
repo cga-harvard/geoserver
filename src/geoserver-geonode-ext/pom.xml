@@ -54,6 +54,11 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>org.geoserver.community</groupId>
+      <artifactId>sldService</artifactId>
+      <version>${geoserver.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.geoserver</groupId>
       <artifactId>restconfig</artifactId>
       <version>${geoserver.version}</version>
@@ -236,7 +241,7 @@
     </dependency>
   </dependencies>
   <properties>
-    <geotools.version>10-SNAPSHOT</geotools.version>
+    <geotools.version>9-SNAPSHOT</geotools.version>
     <geoserver.version>2.4-SNAPSHOT</geoserver.version>
     <jetty.version>6.1.8</jetty.version>
     <maven.test.search.classdir>true</maven.test.search.classdir>
