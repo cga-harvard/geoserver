@@ -392,7 +392,12 @@ public class ConfigDatabase {
             for (int index = 0; index < values.size(); index++) {
                 colIndex = prop.isCollectionProperty() ? (index + 1) : 0;
                 propValue = values.get(index);
-                final String storedValue = marshalValue(propValue);
+                String preliminaryValue = marshalValue(propValue);
+                if (preliminaryValue != null && preliminaryValue.length() > 255) {
+                	preliminaryValue = preliminaryValue.substring(0, 254);
+                    LOGGER.severe("Truncating value for " + id);
+                }
+                final String storedValue = preliminaryValue;
 
                 addAttribute(info, infoPk, prop, colIndex, storedValue);
             }
