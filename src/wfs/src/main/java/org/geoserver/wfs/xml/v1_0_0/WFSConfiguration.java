@@ -168,7 +168,8 @@ public class WFSConfiguration extends Configuration {
         context.registerComponentInstance(catalog);
         context.registerComponentImplementation(PropertyTypePropertyExtractor.class);
 
-        if (true) {
+
+        if (!this.dynamicFeatureTypeSchema) {
             //TODO: this code is copied from the 1.1 configuration, FACTOR IT OUT!!!
             //seed the cache with entries from the catalog
             FeatureTypeCache featureTypeCache = (FeatureTypeCache) context

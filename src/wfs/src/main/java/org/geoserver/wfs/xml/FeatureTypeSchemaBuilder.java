@@ -352,13 +352,6 @@ public abstract class FeatureTypeSchemaBuilder {
             }
         }
 
-//        for (Iterator i = schema.getContents().iterator(); i.hasNext();) {
-//            Object o = i.next();
-//            if (o instanceof XSDImport) {
-//                ((XSDSchemaImpl)((XSDImport)o).getResolvedSchema()).imported((XSDImport)o);
-//
-//            }
-//        }
         return schema;
     }
 
