@@ -130,6 +130,19 @@ public interface SettingsInfo extends Info {
     void setVerboseExceptions(boolean verboseExceptions);
     
     /**
+     * Flag determining if WFS should load a featuretype into schema
+     * as requested/needed, instead of preloading all featuretypes
+     */
+    boolean isDynamicFeatureTypeSchema();
+
+    /**
+     * Sets the flag determining if featuretype schemas should be loaded individually
+     * as needed.
+     */
+    void setDynamicFeatureTypeSchema(boolean dynamicFeatureTypeSchema);
+
+
+    /**
      * A map of metadata for services.
      */
     MetadataMap getMetadata();
