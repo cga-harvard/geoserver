@@ -52,9 +52,9 @@
 
  <repositories>
   <repository>
-   <id>opengeo</id>
-   <name>OpenGeo Maven Repository</name>
-   <url>http://repo.opengeo.org/</url>
+   <id>boundless</id>
+   <name>Boundless Maven Repository</name>
+   <url>http://repo.boundlessgeo.com/main/</url>
    <snapshots>
      <enabled>true</enabled>
    </snapshots>
@@ -77,6 +77,16 @@
       <enabled>false</enabled>
     </snapshots>
   </repository>
+
+  <repository>
+   <id>worldmap</id>
+   <name>Harvard WorldMap Repository</name>
+   <url>http://worldmap.harvard.edu/maven/</url>
+   <snapshots>
+     <enabled>true</enabled>
+   </snapshots>
+  </repository>
+
  </repositories>
 
  <pluginRepositories>
